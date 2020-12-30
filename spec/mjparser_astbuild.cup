@@ -1,0 +1,170 @@
+package rs.ac.bg.etf.pp1;
+
+import java_cup.runtime.*;
+import org.apache.log4j.*;
+
+// import java.io.*;
+import rs.ac.bg.etf.pp1.ast.*;
+
+
+parser code {:
+	
+	boolean errorDetected = false;
+	
+	Logger log = Logger.getLogger(getClass());
+   
+   
+    // slede redefinisani metodi za prijavu gresaka radi izmene teksta poruke
+     
+    public void report_fatal_error(String message, Object info) throws java.lang.Exception {
+      done_parsing();
+      report_error(message, info);
+    }
+  
+    public void syntax_error(Symbol cur_token) {
+        report_error("\nSintaksna greska", cur_token);
+    }
+  
+    public void unrecovered_syntax_error(Symbol cur_token) throws java.lang.Exception {
+        report_fatal_error("Fatalna greska, parsiranje se ne moze nastaviti", cur_token);
+    }
+
+    public void report_error(String message, Object info) {
+    	errorDetected = true;
+    	StringBuilder msg = new StringBuilder(message); 
+    	if (info instanceof Symbol)
+            msg.append (" na liniji ").append(((Symbol)info).left);
+        log.error(msg.toString());
+    }
+    
+    public void report_info(String message, Object info) {
+    	StringBuilder msg = new StringBuilder(message); 
+    	if (info instanceof Symbol)
+            msg.append (" na liniji ").append(((Symbol)info).left);
+        log.info(msg.toString());
+    }
+    
+:}
+
+scan with {:
+	Symbol s = this.getScanner().next_token();
+	if (s != null && s.value != null) 
+		log.info(s.toString() + " " + s.value.toString());
+	return s;
+:}
+
+
+terminal PROG, LBRACE, RBRACE, SEMI, LPAREN, RPAREN, COMMA, PRINT, RETURN, PLUS, EQUAL, VOID;
+terminal Integer NUMBER ;
+terminal String IDENT ;
+terminal IF, ELSE;
+
+nonterminal MethodDeclList MethodDeclList;
+nonterminal VarDecl VarDecl;
+nonterminal FormalParamList FormalParamList;
+nonterminal FormalParamDecl FormalParamDecl;
+nonterminal FormPars FormPars;
+nonterminal ActualPars ActualPars;
+nonterminal ActualParamList ActualParamList; 
+nonterminal StatementList StatementList;
+nonterminal Statement Statement;
+nonterminal Addop Addop;
+nonterminal Unmatched Unmatched;
+nonterminal Matched Matched;
+
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Program, ProgName, Designator, MethodDecl, MethodTypeName; 
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Expr, Factor, VarDeclList; 
+
+Program ::= (Program) PROG ProgName:p VarDeclList:V1 LBRACE MethodDeclList:M2 RBRACE {: RESULT=new Program(p, V1, M2); RESULT.setLine(pleft); :} 
+;
+
+ProgName ::= (ProgName) IDENT:pName {: RESULT=new ProgName(pName); RESULT.setLine(pNameleft); :} 
+;
+
+VarDeclList ::= (VarDeclarations) VarDeclList:V1 VarDecl:V2 {: RESULT=new VarDeclarations(V1, V2); RESULT.setLine(V1left); :}  
+				|
+				(NoVarDecl) {: RESULT=new NoVarDecl(); :}/* epsilon */ 
+				;
+				
+VarDecl ::= (VarDecl) Type:varType IDENT:varName SEMI {: RESULT=new VarDecl(varType, varName); RESULT.setLine(varTypeleft); :} 
+;
+
+Type ::= (Type) IDENT:typeName {: RESULT=new Type(typeName); RESULT.setLine(typeNameleft); :} 
+;
+
+MethodDeclList ::= (MethodDeclarations) MethodDeclList:M1 MethodDecl:M2 {: RESULT=new MethodDeclarations(M1, M2); RESULT.setLine(M1left); :}
+					|
+					(NoMethodDecl) {: RESULT=new NoMethodDecl(); :}/* epsilon */
+					;
+
+MethodDecl ::= (MethodDecl) MethodTypeName:M1
+			   LPAREN FormPars:F2 RPAREN VarDeclList:V3 LBRACE StatementList:S4 RBRACE {: RESULT=new MethodDecl(M1, F2, V3, S4); RESULT.setLine(M1left); :} 
+			   ;
+
+MethodTypeName ::= (MethodTypeName) Type:retType IDENT:methName {: RESULT=new MethodTypeName(retType, methName); RESULT.setLine(retTypeleft); :}
+;
+
+FormPars ::= (FormParams) FormalParamList:F1 {: RESULT=new FormParams(F1); RESULT.setLine(F1left); :} | (NoFormParam) {: RESULT=new NoFormParam(); :} /* epsilon */ ;
+
+FormalParamList ::= (FormalParamDecls) FormalParamList:F1 COMMA FormalParamDecl:F2 {: RESULT=new FormalParamDecls(F1, F2); RESULT.setLine(F1left); :}
+					|
+					(SingleFormalParamDecl) FormalParamDecl:F1 {: RESULT=new SingleFormalParamDecl(F1); RESULT.setLine(F1left); :}
+					;
+					
+FormalParamDecl ::= (FormalParamDecl) Type:T1 IDENT:I2 {: RESULT=new FormalParamDecl(T1, I2); RESULT.setLine(T1left); :} ;
+
+StatementList ::= (Statements) StatementList:S1 Statement:S2 {: RESULT=new Statements(S1, S2); RESULT.setLine(S1left); :} 
+					|
+				  (NoStmt) {: RESULT=new NoStmt(); :} /* epsilon */
+				  ;
+
+Statement ::= (MatchedStmt) Matched:M1 {: RESULT=new MatchedStmt(M1); RESULT.setLine(M1left); :} | (UnmachedStmt) Unmatched:U1 {: RESULT=new UnmachedStmt(U1); RESULT.setLine(U1left); :} ;
+
+Unmatched ::= (UnmatchedIf) IF Expr:E1 Statement:S2 {: RESULT=new UnmatchedIf(E1, S2); RESULT.setLine(E1left); :} | (UnmatchedIfElse) IF Expr:E1 Matched:M2 ELSE Unmatched:U3 {: RESULT=new UnmatchedIfElse(E1, M2, U3); RESULT.setLine(E1left); :};
+	
+				  
+Matched ::= (Assignment) Designator:dest EQUAL Expr:e SEMI {: RESULT=new Assignment(dest, e); RESULT.setLine(destleft); :} 
+			  |
+			  (ErrAssignment) Designator:D1 EQUAL error SEMI
+			  {: parser.log.debug("Uspesan oporavak od greske pri dodeli vrednosti."); :} {: RESULT=new ErrAssignment(D1); RESULT.setLine(D1left); :}
+			  |
+			  (PrintStmt) PRINT LPAREN Expr:E1 RPAREN SEMI {: RESULT=new PrintStmt(E1); RESULT.setLine(E1left); :} 
+			  |
+			  (ReturnExpr) RETURN Expr:t SEMI {: RESULT=new ReturnExpr(t); RESULT.setLine(tleft); :}
+			  |
+			  (ReturnNoExpr) RETURN SEMI {: RESULT=new ReturnNoExpr(); :}
+			  | 
+			  (MatchedIf) IF Expr:E1 Matched:M2 ELSE Matched:M3 {: RESULT=new MatchedIf(E1, M2, M3); RESULT.setLine(E1left); :}
+			  |
+			  (ProcCall) Designator:func LPAREN ActualPars:A1 RPAREN SEMI {: RESULT=new ProcCall(func, A1); RESULT.setLine(funcleft); :}
+			  ;
+			  
+Expr ::= (AddExpr) Expr:te Addop:A1 Term:t {: RESULT=new AddExpr(te, A1, t); RESULT.setLine(teleft); :}
+		 |
+		 (TermExpr) Term:t {: RESULT=new TermExpr(t); RESULT.setLine(tleft); :}
+		 ;
+
+Term ::= (Term) Factor:t {: RESULT=new Term(t); RESULT.setLine(tleft); :} 
+;
+
+Factor ::= (Const) NUMBER:N1 {: RESULT=new Const(N1); RESULT.setLine(N1left); :}
+			|
+		   (Var) Designator:d {: RESULT=new Var(d); RESULT.setLine(dleft); :}
+		    |
+		   (FuncCall) Designator:func LPAREN ActualPars:A1 RPAREN {: RESULT=new FuncCall(func, A1); RESULT.setLine(funcleft); :}
+		   ;
+
+ActualPars ::= (Actuals) ActualParamList:A1 {: RESULT=new Actuals(A1); RESULT.setLine(A1left); :} 
+				| 
+			   (NoActuals) {: RESULT=new NoActuals(); :} /* epsilon */ 
+			   ;
+			   
+ActualParamList ::= (ActualParams) ActualParamList:A1 COMMA Expr:E2 {: RESULT=new ActualParams(A1, E2); RESULT.setLine(A1left); :}
+					|
+					(ActualParam) Expr:E1 {: RESULT=new ActualParam(E1); RESULT.setLine(E1left); :}
+					;
+
+Designator ::= (Designator) IDENT:name {: RESULT=new Designator(name); RESULT.setLine(nameleft); :}
+;
+
+Addop ::= (Addop) PLUS {: RESULT=new Addop(); :} ;

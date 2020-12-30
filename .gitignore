@@ -1,0 +1,8 @@
+lib
+logs
+config
+src.rs.ac.bg.etf.pp1.ast
+bin
+.settings
+.classpath
+.project
