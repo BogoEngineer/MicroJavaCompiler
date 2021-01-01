@@ -1,5 +1,6 @@
 program MJProgram
 	int x; int y;
+	int g=5, p;
 {
 	
 	int k () int c; {
@@ -8,7 +9,7 @@ program MJProgram
 	}
 	
 	int main() {
-		y = 2;
+		y = 2+;
 		x = y + 2;
 		y = k() + 3;
 		print(y);

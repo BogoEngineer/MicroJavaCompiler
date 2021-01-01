@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 31/11/2020 16:3:33
+// 1/0/2021 21:46:19
 
 
 package rs.ac.bg.etf.pp1.ast;
@@ -12,12 +12,14 @@ public interface Visitor {
     public void visit(Extending Extending);
     public void visit(DesignatorFactor DesignatorFactor);
     public void visit(MethodDecl MethodDecl);
+    public void visit(VarDeclSemi VarDeclSemi);
     public void visit(Constant Constant);
     public void visit(Matched Matched);
     public void visit(Relop Relop);
     public void visit(MethodType MethodType);
     public void visit(FormalParamDecl FormalParamDecl);
     public void visit(MethodDeclBlock MethodDeclBlock);
+    public void visit(BraceMethodDeclBlock BraceMethodDeclBlock);
     public void visit(StatementBlock StatementBlock);
     public void visit(UnsignedExpr UnsignedExpr);
     public void visit(VarNoType VarNoType);
@@ -33,6 +35,7 @@ public interface Visitor {
     public void visit(VarDeclList VarDeclList);
     public void visit(FormalParamList FormalParamList);
     public void visit(Expr Expr);
+    public void visit(Expr1 Expr1);
     public void visit(DesignatorStatement DesignatorStatement);
     public void visit(ActualPars ActualPars);
     public void visit(NewFactor NewFactor);
@@ -63,6 +66,7 @@ public interface Visitor {
     public void visit(NewFactorArray NewFactorArray);
     public void visit(NewFactorSingle NewFactorSingle);
     public void visit(DesignatorActPars DesignatorActPars);
+    public void visit(ParenExpr ParenExpr);
     public void visit(FuncCall FuncCall);
     public void visit(New New);
     public void visit(BoolConst BoolConst);
@@ -73,9 +77,10 @@ public interface Visitor {
     public void visit(FactorMulopTerm FactorMulopTerm);
     public void visit(TermExpr TermExpr);
     public void visit(AddExpr AddExpr);
+    public void visit(NegExpr1 NegExpr1);
+    public void visit(PosExpr1 PosExpr1);
     public void visit(TernaryExpr TernaryExpr);
-    public void visit(PosExpr PosExpr);
-    public void visit(NegExpr NegExpr);
+    public void visit(NormalExpr NormalExpr);
     public void visit(ERECondFact ERECondFact);
     public void visit(ExprCondFact ExprCondFact);
     public void visit(SingleCondFact SingleCondFact);
@@ -102,7 +107,7 @@ public interface Visitor {
     public void visit(ReturnNoExpr ReturnNoExpr);
     public void visit(ReturnExpr ReturnExpr);
     public void visit(PrintStmt PrintStmt);
-    public void visit(ErrAssignment ErrAssignment);
+    public void visit(MatchedDerived1 MatchedDerived1);
     public void visit(Assignment Assignment);
     public void visit(UnmatchedIfElse UnmatchedIfElse);
     public void visit(UnmatchedIf UnmatchedIf);
@@ -129,6 +134,7 @@ public interface Visitor {
     public void visit(MultiMethodDeclarations MultiMethodDeclarations);
     public void visit(NoMethodBlock NoMethodBlock);
     public void visit(MethodBlock MethodBlock);
+    public void visit(BMDBlock BMDBlock);
     public void visit(NotExtended NotExtended);
     public void visit(Extended Extended);
     public void visit(ClassDecl ClassDecl);
@@ -136,9 +142,10 @@ public interface Visitor {
     public void visit(VarIdentArray VarIdentArray);
     public void visit(VarIdentSingle VarIdentSingle);
     public void visit(VarWithType VarWithType);
+    public void visit(VarDeclListDerived1 VarDeclListDerived1);
     public void visit(SingleVar SingleVar);
     public void visit(MultiVarDecl MultiVarDecl);
-    public void visit(VarDeclSemi VarDeclSemi);
+    public void visit(VarDeclSemicolon VarDeclSemicolon);
     public void visit(BoolCon BoolCon);
     public void visit(CharCon CharCon);
     public void visit(NumberCon NumberCon);

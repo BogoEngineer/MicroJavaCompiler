@@ -1,28 +1,28 @@
 // generated with ast extension for cup
 // version 0.8
-// 31/11/2020 16:3:33
+// 1/0/2021 21:46:19
 
 
 package rs.ac.bg.etf.pp1.ast;
 
 public class DoWhileStmt extends Matched {
 
-    private Statement Statement;
+    private StatementBlock StatementBlock;
     private Condition Condition;
 
-    public DoWhileStmt (Statement Statement, Condition Condition) {
-        this.Statement=Statement;
-        if(Statement!=null) Statement.setParent(this);
+    public DoWhileStmt (StatementBlock StatementBlock, Condition Condition) {
+        this.StatementBlock=StatementBlock;
+        if(StatementBlock!=null) StatementBlock.setParent(this);
         this.Condition=Condition;
         if(Condition!=null) Condition.setParent(this);
     }
 
-    public Statement getStatement() {
-        return Statement;
+    public StatementBlock getStatementBlock() {
+        return StatementBlock;
     }
 
-    public void setStatement(Statement Statement) {
-        this.Statement=Statement;
+    public void setStatementBlock(StatementBlock StatementBlock) {
+        this.StatementBlock=StatementBlock;
     }
 
     public Condition getCondition() {
@@ -38,18 +38,18 @@ public class DoWhileStmt extends Matched {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if(Statement!=null) Statement.accept(visitor);
+        if(StatementBlock!=null) StatementBlock.accept(visitor);
         if(Condition!=null) Condition.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if(Statement!=null) Statement.traverseTopDown(visitor);
+        if(StatementBlock!=null) StatementBlock.traverseTopDown(visitor);
         if(Condition!=null) Condition.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if(Statement!=null) Statement.traverseBottomUp(visitor);
+        if(StatementBlock!=null) StatementBlock.traverseBottomUp(visitor);
         if(Condition!=null) Condition.traverseBottomUp(visitor);
         accept(visitor);
     }
@@ -59,8 +59,8 @@ public class DoWhileStmt extends Matched {
         buffer.append(tab);
         buffer.append("DoWhileStmt(\n");
 
-        if(Statement!=null)
-            buffer.append(Statement.toString("  "+tab));
+        if(StatementBlock!=null)
+            buffer.append(StatementBlock.toString("  "+tab));
         else
             buffer.append(tab+"  null");
         buffer.append("\n");

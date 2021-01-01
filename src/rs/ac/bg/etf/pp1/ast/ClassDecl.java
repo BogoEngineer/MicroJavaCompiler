@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 31/11/2020 16:3:33
+// 1/0/2021 21:46:19
 
 
 package rs.ac.bg.etf.pp1.ast;
@@ -10,15 +10,18 @@ public class ClassDecl implements SyntaxNode {
     private SyntaxNode parent;
     private int line;
     private String I1;
-    private VarDeclList VarDeclList;
-    private MethodDeclBlock MethodDeclBlock;
+    private Extending Extending;
+    private VarDeclarationBlock VarDeclarationBlock;
+    private BraceMethodDeclBlock BraceMethodDeclBlock;
 
-    public ClassDecl (String I1, VarDeclList VarDeclList, MethodDeclBlock MethodDeclBlock) {
+    public ClassDecl (String I1, Extending Extending, VarDeclarationBlock VarDeclarationBlock, BraceMethodDeclBlock BraceMethodDeclBlock) {
         this.I1=I1;
-        this.VarDeclList=VarDeclList;
-        if(VarDeclList!=null) VarDeclList.setParent(this);
-        this.MethodDeclBlock=MethodDeclBlock;
-        if(MethodDeclBlock!=null) MethodDeclBlock.setParent(this);
+        this.Extending=Extending;
+        if(Extending!=null) Extending.setParent(this);
+        this.VarDeclarationBlock=VarDeclarationBlock;
+        if(VarDeclarationBlock!=null) VarDeclarationBlock.setParent(this);
+        this.BraceMethodDeclBlock=BraceMethodDeclBlock;
+        if(BraceMethodDeclBlock!=null) BraceMethodDeclBlock.setParent(this);
     }
 
     public String getI1() {
@@ -29,20 +32,28 @@ public class ClassDecl implements SyntaxNode {
         this.I1=I1;
     }
 
-    public VarDeclList getVarDeclList() {
-        return VarDeclList;
+    public Extending getExtending() {
+        return Extending;
     }
 
-    public void setVarDeclList(VarDeclList VarDeclList) {
-        this.VarDeclList=VarDeclList;
+    public void setExtending(Extending Extending) {
+        this.Extending=Extending;
     }
 
-    public MethodDeclBlock getMethodDeclBlock() {
-        return MethodDeclBlock;
+    public VarDeclarationBlock getVarDeclarationBlock() {
+        return VarDeclarationBlock;
     }
 
-    public void setMethodDeclBlock(MethodDeclBlock MethodDeclBlock) {
-        this.MethodDeclBlock=MethodDeclBlock;
+    public void setVarDeclarationBlock(VarDeclarationBlock VarDeclarationBlock) {
+        this.VarDeclarationBlock=VarDeclarationBlock;
+    }
+
+    public BraceMethodDeclBlock getBraceMethodDeclBlock() {
+        return BraceMethodDeclBlock;
+    }
+
+    public void setBraceMethodDeclBlock(BraceMethodDeclBlock BraceMethodDeclBlock) {
+        this.BraceMethodDeclBlock=BraceMethodDeclBlock;
     }
 
     public SyntaxNode getParent() {
@@ -66,19 +77,22 @@ public class ClassDecl implements SyntaxNode {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if(VarDeclList!=null) VarDeclList.accept(visitor);
-        if(MethodDeclBlock!=null) MethodDeclBlock.accept(visitor);
+        if(Extending!=null) Extending.accept(visitor);
+        if(VarDeclarationBlock!=null) VarDeclarationBlock.accept(visitor);
+        if(BraceMethodDeclBlock!=null) BraceMethodDeclBlock.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if(VarDeclList!=null) VarDeclList.traverseTopDown(visitor);
-        if(MethodDeclBlock!=null) MethodDeclBlock.traverseTopDown(visitor);
+        if(Extending!=null) Extending.traverseTopDown(visitor);
+        if(VarDeclarationBlock!=null) VarDeclarationBlock.traverseTopDown(visitor);
+        if(BraceMethodDeclBlock!=null) BraceMethodDeclBlock.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if(VarDeclList!=null) VarDeclList.traverseBottomUp(visitor);
-        if(MethodDeclBlock!=null) MethodDeclBlock.traverseBottomUp(visitor);
+        if(Extending!=null) Extending.traverseBottomUp(visitor);
+        if(VarDeclarationBlock!=null) VarDeclarationBlock.traverseBottomUp(visitor);
+        if(BraceMethodDeclBlock!=null) BraceMethodDeclBlock.traverseBottomUp(visitor);
         accept(visitor);
     }
 
@@ -90,14 +104,20 @@ public class ClassDecl implements SyntaxNode {
         buffer.append(" "+tab+I1);
         buffer.append("\n");
 
-        if(VarDeclList!=null)
-            buffer.append(VarDeclList.toString("  "+tab));
+        if(Extending!=null)
+            buffer.append(Extending.toString("  "+tab));
         else
             buffer.append(tab+"  null");
         buffer.append("\n");
 
-        if(MethodDeclBlock!=null)
-            buffer.append(MethodDeclBlock.toString("  "+tab));
+        if(VarDeclarationBlock!=null)
+            buffer.append(VarDeclarationBlock.toString("  "+tab));
+        else
+            buffer.append(tab+"  null");
+        buffer.append("\n");
+
+        if(BraceMethodDeclBlock!=null)
+            buffer.append(BraceMethodDeclBlock.toString("  "+tab));
         else
             buffer.append(tab+"  null");
         buffer.append("\n");

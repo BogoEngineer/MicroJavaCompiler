@@ -1,15 +1,15 @@
 // generated with ast extension for cup
 // version 0.8
-// 31/11/2020 16:3:33
+// 1/0/2021 21:46:19
 
 
 package rs.ac.bg.etf.pp1.ast;
 
-public class NegExpr extends Expr {
+public class NegExpr1 extends Expr1 {
 
     private UnsignedExpr UnsignedExpr;
 
-    public NegExpr (UnsignedExpr UnsignedExpr) {
+    public NegExpr1 (UnsignedExpr UnsignedExpr) {
         this.UnsignedExpr=UnsignedExpr;
         if(UnsignedExpr!=null) UnsignedExpr.setParent(this);
     }
@@ -43,7 +43,7 @@ public class NegExpr extends Expr {
     public String toString(String tab) {
         StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
-        buffer.append("NegExpr(\n");
+        buffer.append("NegExpr1(\n");
 
         if(UnsignedExpr!=null)
             buffer.append(UnsignedExpr.toString("  "+tab));
@@ -52,7 +52,7 @@ public class NegExpr extends Expr {
         buffer.append("\n");
 
         buffer.append(tab);
-        buffer.append(") [NegExpr]");
+        buffer.append(") [NegExpr1]");
         return buffer.toString();
     }
 }

@@ -78,7 +78,7 @@ nonterminal Type, Term, Expr, Factor, VarDeclList, DesignatorFactor, MinusSign;
 
 nonterminal DeclarationList, ClassDecl, VarDeclSemi, ConstDecl, Constant, Extending, MethodDeclBlock, ConstDeclSemi;
 nonterminal SwitchCaseList, Condition, Assignop, VarNoType;
-nonterminal CondTerm, CondFact, UnsignedExpr, Mulop, NewFactor, Relop, VarDeclarationBlock, StatementBlock;
+nonterminal CondTerm, CondFact, UnsignedExpr, Mulop, NewFactor, Relop, VarDeclarationBlock, StatementBlock, Expr1, BraceMethodDeclBlock;
 
 Program ::= (Program) PROG ProgName:p DeclarationList LBRACE MethodDeclBlock RBRACE;
 
@@ -94,6 +94,9 @@ Declaration ::= (VarDeclaration) VarDeclSemi
 				(ConstDeclaration) ConstDeclSemi
 					|
 				(ClassDeclaration) ClassDecl
+					//|
+				 //error SEMI:g
+			   	 //{: parser.report_error("Izvrsen oporavak do ; u liniji " + gleft, null);  :} /* greska globalna def */
 					;
 
 ConstDeclSemi ::= (ConstDeclBlockSemi) ConstDecl SEMI;
@@ -110,11 +113,14 @@ Constant ::= (NumberCon) NUMBER
 			  (BoolCon) BOOLCONST
 			  	;
 			  	
-VarDeclSemi ::= (VarDeclSemi) VarDeclList SEMI;
+VarDeclSemi ::= (VarDeclSemicolon) VarDeclList SEMI;
 
 VarDeclList ::= (MultiVarDecl) VarDeclList COMMA VarNoType
 					|
 				(SingleVar) VarDecl
+					|
+				 error:o
+			   	 {: parser.report_error("Izvrsen oporavak do , ili ; u liniji " + oleft, null);  :} /* greska globalna def */
 					;
 	
 VarDecl ::= (VarWithType) Type VarNoType;
@@ -126,12 +132,14 @@ VarNoType ::= (VarIdentSingle) IDENT
 
 Type ::= (Type) IDENT:typeName;
 
-ClassDecl ::= (ClassDecl) CLASS IDENT EXTENDS LBRACE VarDeclList MethodDeclBlock RBRACE;
+ClassDecl ::= (ClassDecl) CLASS IDENT Extending LBRACE VarDeclarationBlock BraceMethodDeclBlock RBRACE;
 
 Extending ::= (Extended) EXTENDS Type
 				|
 			  (NotExtended) /* epsilon */
 			  	;
+
+BraceMethodDeclBlock ::= (BMDBlock) LBRACE MethodDeclBlock RBRACE;
 			  	
 MethodDeclBlock ::= (MethodBlock) MethodDeclList 
 						|
@@ -192,9 +200,9 @@ Unmatched ::= (UnmatchedIf) IF LPAREN Condition RPAREN Statement | (UnmatchedIfE
 				  
 Matched ::= (Assignment) DesignatorStatement:dest SEMI 
 			  |
-			(ErrAssignment) Designator EQUAL error SEMI
-			{: parser.log.debug("Uspesan oporavak od greske pri dodeli vrednosti."); :}
-			  |
+			 error SEMI:l
+		   	 {: parser.report_error("Izvrsen oporavak do ; u liniji " + lleft, null);  :} /* iskaz dodele */
+		   	  |
 			(PrintStmt) PRINT LPAREN Expr RPAREN SEMI 
 			  |
 			(ReturnExpr) RETURN Expr:t SEMI
@@ -203,7 +211,7 @@ Matched ::= (Assignment) DesignatorStatement:dest SEMI
 			  | 
 			(MatchedIf) IF LPAREN Condition RPAREN Matched ELSE Matched
 			  |
-			(DoWhileStmt) DO Statement WHILE LPAREN Condition RPAREN SEMI
+			(DoWhileStmt) DO StatementBlock WHILE LPAREN Condition RPAREN SEMI
 			  |
 			(SwitchStmt) SWITCH LPAREN Expr RPAREN LBRACE SwitchCaseList RBRACE
 			  |
@@ -213,7 +221,7 @@ Matched ::= (Assignment) DesignatorStatement:dest SEMI
 			  |
 			(ReadStmt) READ LPAREN Designator RPAREN SEMI
 			  |
-			(BlockStmt) LBRACE Statement RBRACE
+			(BlockStmt) LBRACE StatementBlock RBRACE
 			  ;
 
 SwitchCaseList ::=  (MultiCase) SwitchCaseList CASE NUMBER COLON StatementList
@@ -253,23 +261,26 @@ CondTerm ::= (MultiCondFact) CondTerm DAMPERSAND CondFact
 CondFact ::= (ExprCondFact) Expr
 				|
 			 (ERECondFact) Expr Relop Expr
-			 	;
+			 	; 
 
-Expr ::= (NegExpr) MINUS UnsignedExpr
+Expr ::= (NormalExpr) Expr1
 			|
-		 (PosExpr) UnsignedExpr
-		 	|
-		 (TernaryExpr) CondFact QMARK Expr COLON Expr /* ovo je lose */
+		 (TernaryExpr) Expr1 QMARK Expr1 COLON Expr1 /* revizirano */
 		 	;
 
-UnsignedExpr ::= (AddExpr) UnsignedExpr Addop Term
-		  			|
+Expr1 ::= (PosExpr1) UnsignedExpr
+			|
+		  (NegExpr1) MINUS UnsignedExpr
+		  	;
+		 	
+UnsignedExpr ::= (AddExpr) UnsignedExpr Addop Term /* Ne moze sa ovim Relop onda */
+		  			|		  		 	
 		 		 (TermExpr) Term
 		 			;
 
 Term ::= (FactorMulopTerm) Term Mulop Factor 
 			|
-		 (FactorTerm) Factor 
+		 (FactorTerm) Factor
 		 	;
 
 Factor ::= (Var) Designator
@@ -283,6 +294,8 @@ Factor ::= (Var) Designator
 		   (New) NewFactor
 		   	| 
 		   (FuncCall) DesignatorFactor
+		   	|
+		   (ParenExpr) LPAREN Expr RPAREN
 		   	;
 
 DesignatorFactor ::= (DesignatorActPars) Designator LPAREN ActualPars RPAREN;

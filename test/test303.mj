@@ -3,7 +3,7 @@
 program test_303
 
 const int cinilac = 4, delilac = 3;
-
+// int x = 5;
 class Predmet
 {
 	 int tezina;

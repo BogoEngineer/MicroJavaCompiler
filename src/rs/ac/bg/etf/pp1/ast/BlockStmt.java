@@ -1,25 +1,25 @@
 // generated with ast extension for cup
 // version 0.8
-// 31/11/2020 16:3:33
+// 1/0/2021 21:46:19
 
 
 package rs.ac.bg.etf.pp1.ast;
 
 public class BlockStmt extends Matched {
 
-    private Statement Statement;
+    private StatementBlock StatementBlock;
 
-    public BlockStmt (Statement Statement) {
-        this.Statement=Statement;
-        if(Statement!=null) Statement.setParent(this);
+    public BlockStmt (StatementBlock StatementBlock) {
+        this.StatementBlock=StatementBlock;
+        if(StatementBlock!=null) StatementBlock.setParent(this);
     }
 
-    public Statement getStatement() {
-        return Statement;
+    public StatementBlock getStatementBlock() {
+        return StatementBlock;
     }
 
-    public void setStatement(Statement Statement) {
-        this.Statement=Statement;
+    public void setStatementBlock(StatementBlock StatementBlock) {
+        this.StatementBlock=StatementBlock;
     }
 
     public void accept(Visitor visitor) {
@@ -27,16 +27,16 @@ public class BlockStmt extends Matched {
     }
 
     public void childrenAccept(Visitor visitor) {
-        if(Statement!=null) Statement.accept(visitor);
+        if(StatementBlock!=null) StatementBlock.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
-        if(Statement!=null) Statement.traverseTopDown(visitor);
+        if(StatementBlock!=null) StatementBlock.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
-        if(Statement!=null) Statement.traverseBottomUp(visitor);
+        if(StatementBlock!=null) StatementBlock.traverseBottomUp(visitor);
         accept(visitor);
     }
 
@@ -45,8 +45,8 @@ public class BlockStmt extends Matched {
         buffer.append(tab);
         buffer.append("BlockStmt(\n");
 
-        if(Statement!=null)
-            buffer.append(Statement.toString("  "+tab));
+        if(StatementBlock!=null)
+            buffer.append(StatementBlock.toString("  "+tab));
         else
             buffer.append(tab+"  null");
         buffer.append("\n");
