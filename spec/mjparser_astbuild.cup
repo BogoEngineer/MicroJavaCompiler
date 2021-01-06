@@ -78,21 +78,10 @@ nonterminal ActualParamList ActualParamList;
 nonterminal StatementList StatementList;
 nonterminal Statement Statement;
 nonterminal Addop Addop;
-nonterminal Unmatched Unmatched;
-nonterminal Matched Matched;
 
-nonterminal Program Program;
-nonterminal ProgName ProgName;
-nonterminal Designator Designator;
-nonterminal MethodDecl MethodDecl;
-nonterminal MethodTypeName MethodTypeName;
 nonterminal Declaration Declaration;
 nonterminal MethodType MethodType;
 nonterminal DesignatorStatement DesignatorStatement; 
-nonterminal Type Type;
-nonterminal Term Term;
-nonterminal Expr Expr;
-nonterminal Factor Factor;
 nonterminal VarDeclList VarDeclList;
 nonterminal DesignatorFactor DesignatorFactor;
 nonterminal MinusSign MinusSign; 
@@ -120,9 +109,13 @@ nonterminal StatementBlock StatementBlock;
 nonterminal Expr1 Expr1;
 nonterminal BraceMethodDeclBlock BraceMethodDeclBlock;
 
+
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName, Designator;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Factor, Expr;
+
 Program ::= (Program) PROG ProgName:p DeclarationList:D1 LBRACE MethodDeclBlock:M2 RBRACE {: RESULT=new Program(p, D1, M2); RESULT.setLine(pleft); :};
 
-ProgName ::= (ProgName) IDENT:pName {: RESULT=new ProgName(pName); RESULT.setLine(pNameleft); :};
+ProgName ::= (ProgName) IDENT:progName {: RESULT=new ProgName(progName); RESULT.setLine(progNameleft); :};
 
 DeclarationList ::= (MultiDeclaration) DeclarationList:D1 Declaration:D2 {: RESULT=new MultiDeclaration(D1, D2); RESULT.setLine(D1left); :}
 						|
@@ -139,18 +132,18 @@ Declaration ::= (VarDeclaration) VarDeclSemi:V1 {: RESULT=new VarDeclaration(V1)
 			   	 //{: parser.report_error("Izvrsen oporavak do ; u liniji " + gleft, null);  :} /* greska globalna def */
 					;
 
-ConstDeclSemi ::= (ConstDeclBlockSemi) ConstDecl:C1 SEMI {: RESULT=new ConstDeclBlockSemi(C1); RESULT.setLine(C1left); :};
+ConstDeclSemi ::= (ConstDeclSemi) ConstDecl:C1 SEMI {: RESULT=new ConstDeclSemi(C1); RESULT.setLine(C1left); :};
 
-ConstDecl ::= (MultiConstDecl) ConstDecl:C1 COMMA IDENT:I2 EQUAL Constant:C3 {: RESULT=new MultiConstDecl(C1, I2, C3); RESULT.setLine(C1left); :}
+ConstDecl ::= (MultiConstDecl) ConstDecl:C1 COMMA IDENT:constName EQUAL Constant:cnst {: RESULT=new MultiConstDecl(C1, constName, cnst); RESULT.setLine(C1left); :}
 				|
-			  (SingleConstDecl) CONST Type:T1 IDENT:I2 EQUAL Constant:C3 {: RESULT=new SingleConstDecl(T1, I2, C3); RESULT.setLine(T1left); :}
+			  (SingleConstDecl) CONST Type:constType IDENT:constName EQUAL Constant:cnst {: RESULT=new SingleConstDecl(constType, constName, cnst); RESULT.setLine(constTypeleft); :}
 			  	;  		
 			  	
-Constant ::= (NumberCon) NUMBER:N1 {: RESULT=new NumberCon(N1); RESULT.setLine(N1left); :}
+Constant ::= (NumberCon) NUMBER:num {: RESULT=new NumberCon(num); RESULT.setLine(numleft); :}
 				|
-			  (CharCon) CHARCONST:C1 {: RESULT=new CharCon(C1); RESULT.setLine(C1left); :}
+			  (CharCon) CHARCONST:chr {: RESULT=new CharCon(chr); RESULT.setLine(chrleft); :}
 			  	|
-			  (BoolCon) BOOLCONST:B1 {: RESULT=new BoolCon(B1); RESULT.setLine(B1left); :}
+			  (BoolCon) BOOLCONST:bol {: RESULT=new BoolCon(bol); RESULT.setLine(bolleft); :}
 			  	;
 			  	
 VarDeclSemi ::= (VarDeclSemicolon) VarDeclList:V1 SEMI {: RESULT=new VarDeclSemicolon(V1); RESULT.setLine(V1left); :};
@@ -159,15 +152,15 @@ VarDeclList ::= (MultiVarDecl) VarDeclList:V1 COMMA VarNoType:V2 {: RESULT=new M
 					|
 				(SingleVar) VarDecl:V1 {: RESULT=new SingleVar(V1); RESULT.setLine(V1left); :}
 					|
-				 error SEMI:o
-			   	 {: parser.report_error("Izvrsen oporavak do , u liniji " + oleft, null);  :} {: RESULT=new VarDeclListDerived1(); :} /* greska globalna def */
+				 error:o
+			   	 {: parser.report_error("Izvrsen oporavak do , ili ; u liniji " + oleft, null);  :} {: RESULT=new VarDeclListDerived1(); :} /* greska globalna def */
 					;
 	
 VarDecl ::= (VarWithType) Type:T1 VarNoType:V2 {: RESULT=new VarWithType(T1, V2); RESULT.setLine(T1left); :};
 				
-VarNoType ::= (VarIdentSingle) IDENT:I1 {: RESULT=new VarIdentSingle(I1); RESULT.setLine(I1left); :}
+VarNoType ::= (VarIdentSingle) IDENT:varName {: RESULT=new VarIdentSingle(varName); RESULT.setLine(varNameleft); :}
 				|
-			  (VarIdentArray) IDENT:I1 LBRACKET RBRACKET {: RESULT=new VarIdentArray(I1); RESULT.setLine(I1left); :}
+			  (VarIdentArray) IDENT:varName LBRACKET RBRACKET {: RESULT=new VarIdentArray(varName); RESULT.setLine(varNameleft); :}
 			  	;
 
 Type ::= (Type) IDENT:typeName {: RESULT=new Type(typeName); RESULT.setLine(typeNameleft); :};
@@ -198,9 +191,9 @@ MethodDecl ::= (MethodDeclVars) MethodTypeName:M1 LPAREN FormPars:F2 RPAREN VarD
 
 MethodTypeName ::= (MethodTypeName) MethodType:retType IDENT:methName {: RESULT=new MethodTypeName(retType, methName); RESULT.setLine(retTypeleft); :};
 
-MethodType ::= (NonVoidType) Type:T1 {: RESULT=new NonVoidType(T1); RESULT.setLine(T1left); :} 
+MethodType ::= (NonVoidType) Type:retType {: RESULT=new NonVoidType(retType); RESULT.setLine(retTypeleft); :}
 				| 
-			   (VoidType) VOID {: RESULT=new VoidType(); :}
+			   (VoidType) VOID:retType {: RESULT=new VoidType(); :}
 			   	;
 			   	
 VarDeclarationBlock ::= (MultiVarDeclSemi) VarDeclarationBlock:V1 VarDeclSemi:V2 {: RESULT=new MultiVarDeclSemi(V1, V2); RESULT.setLine(V1left); :}
@@ -232,36 +225,17 @@ StatementList ::= (MultiStatement) StatementList:S1 Statement:S2 {: RESULT=new M
 					|
 				  (SingleStatement) Statement:S1 {: RESULT=new SingleStatement(S1); RESULT.setLine(S1left); :}
 				  	;
-
-Statement ::= (MatchedStmt) Matched:M1 {: RESULT=new MatchedStmt(M1); RESULT.setLine(M1left); :} | (UnmachedStmt) Unmatched:U1 {: RESULT=new UnmachedStmt(U1); RESULT.setLine(U1left); :} ;
-
-Unmatched ::= (UnmatchedIf) IF LPAREN Condition:C1 RPAREN Statement:S2 {: RESULT=new UnmatchedIf(C1, S2); RESULT.setLine(C1left); :} | (UnmatchedIfElse) IF LPAREN Condition:C1 RPAREN Matched:M2 ELSE Unmatched:U3 {: RESULT=new UnmatchedIfElse(C1, M2, U3); RESULT.setLine(C1left); :};
-
-				  
-Matched ::= (Assignment) DesignatorStatement:dest SEMI {: RESULT=new Assignment(dest); RESULT.setLine(destleft); :} 
+			  
+Statement ::= (Assignment) DesignatorStatement:dest SEMI {: RESULT=new Assignment(dest); RESULT.setLine(destleft); :} 
 			  |
 			 error SEMI:l
-		   	 {: parser.report_error("Izvrsen oporavak do ; u liniji " + lleft, null);  :} {: RESULT=new MatchedDerived1(); :} /* iskaz dodele */
+		   	 {: parser.report_error("Izvrsen oporavak do ; u liniji " + lleft, null);  :} {: RESULT=new StatementDerived1(); :} /* iskaz dodele */
 		   	  |
 			(PrintStmt) PRINT LPAREN Expr:E1 RPAREN SEMI {: RESULT=new PrintStmt(E1); RESULT.setLine(E1left); :} 
 			  |
-			(ReturnExpr) RETURN Expr:t SEMI {: RESULT=new ReturnExpr(t); RESULT.setLine(tleft); :}
-			  |
-	  		(ReturnNoExpr) RETURN SEMI {: RESULT=new ReturnNoExpr(); :}
-			  | 
-			(MatchedIf) IF LPAREN Condition:C1 RPAREN Matched:M2 ELSE Matched:M3 {: RESULT=new MatchedIf(C1, M2, M3); RESULT.setLine(C1left); :}
-			  |
 			(DoWhileStmt) DO StatementBlock:S1 WHILE LPAREN Condition:C2 RPAREN SEMI {: RESULT=new DoWhileStmt(S1, C2); RESULT.setLine(S1left); :}
 			  |
-			(SwitchStmt) SWITCH LPAREN Expr:E1 RPAREN LBRACE SwitchCaseList:S2 RBRACE {: RESULT=new SwitchStmt(E1, S2); RESULT.setLine(E1left); :}
-			  |
-			(BreakStmt) BREAK SEMI {: RESULT=new BreakStmt(); :}
-			  |
-			(ContinueStmt) CONTINUE SEMI {: RESULT=new ContinueStmt(); :}
-			  |
 			(ReadStmt) READ LPAREN Designator:D1 RPAREN SEMI {: RESULT=new ReadStmt(D1); RESULT.setLine(D1left); :}
-			  |
-			(BlockStmt) LBRACE StatementBlock:S1 RBRACE {: RESULT=new BlockStmt(S1); RESULT.setLine(S1left); :}
 			  ;
 
 SwitchCaseList ::=  (MultiCase) SwitchCaseList:S1 CASE NUMBER:N2 COLON StatementList:S3 {: RESULT=new MultiCase(S1, N2, S3); RESULT.setLine(S1left); :}
@@ -270,9 +244,7 @@ SwitchCaseList ::=  (MultiCase) SwitchCaseList:S1 CASE NUMBER:N2 COLON Statement
 				    	;
 
 DesignatorStatement ::= (AssignmentExpr) Designator:D1 Assignop:A2 Expr:E3 {: RESULT=new AssignmentExpr(D1, A2, E3); RESULT.setLine(D1left); :}
-							|
-						(Func) Designator:D1 LPAREN ActualPars:A2 RPAREN {: RESULT=new Func(D1, A2); RESULT.setLine(D1left); :}
-							|
+							|							
 						(Increment) Designator:D1 DPLUS {: RESULT=new Increment(D1); RESULT.setLine(D1left); :}
 							|
 						(Decrement) Designator:D1 DMINUS {: RESULT=new Decrement(D1); RESULT.setLine(D1left); :}
@@ -313,7 +285,7 @@ Expr1 ::= (PosExpr1) UnsignedExpr:U1 {: RESULT=new PosExpr1(U1); RESULT.setLine(
 		  (NegExpr1) MINUS UnsignedExpr:U1 {: RESULT=new NegExpr1(U1); RESULT.setLine(U1left); :}
 		  	;
 		 	
-UnsignedExpr ::= (AddExpr) UnsignedExpr:U1 Addop:A2 Term:T3 {: RESULT=new AddExpr(U1, A2, T3); RESULT.setLine(U1left); :} /* Ne moze sa ovim Relop onda */
+UnsignedExpr ::= (AddExpr) UnsignedExpr:U1 Addop:A2 Term:T3 {: RESULT=new AddExpr(U1, A2, T3); RESULT.setLine(U1left); :}
 		  			|		  		 	
 		 		 (TermExpr) Term:T1 {: RESULT=new TermExpr(T1); RESULT.setLine(T1left); :}
 		 			;
@@ -332,8 +304,6 @@ Factor ::= (Var) Designator:D1 {: RESULT=new Var(D1); RESULT.setLine(D1left); :}
 		   (BoolConst) BOOLCONST:B1 {: RESULT=new BoolConst(B1); RESULT.setLine(B1left); :}
 		   	|
 		   (New) NewFactor:N1 {: RESULT=new New(N1); RESULT.setLine(N1left); :}
-		   	| 
-		   (FuncCall) DesignatorFactor:D1 {: RESULT=new FuncCall(D1); RESULT.setLine(D1left); :}
 		   	|
 		   (ParenExpr) LPAREN Expr:E1 RPAREN {: RESULT=new ParenExpr(E1); RESULT.setLine(E1left); :}
 		   	;
@@ -346,9 +316,7 @@ NewFactor ::= (NewFactorSingle) NEW Type:T1 {: RESULT=new NewFactorSingle(T1); R
 			  	;
 
 
-Designator ::= (DesignatorField) Designator:D1 DOT IDENT:name {: RESULT=new DesignatorField(D1, name); RESULT.setLine(D1left); :} 
-				|
-			   (DesignatorIndex) Designator:D1 LBRACKET Expr:E2 RBRACKET {: RESULT=new DesignatorIndex(D1, E2); RESULT.setLine(D1left); :} 
+Designator ::= (DesignatorIndex) IDENT:name LBRACKET Expr:E1 RBRACKET {: RESULT=new DesignatorIndex(name, E1); RESULT.setLine(nameleft); :} 
 				|
 			   (SingleDesignator) IDENT:name {: RESULT=new SingleDesignator(name); RESULT.setLine(nameleft); :}
 				;

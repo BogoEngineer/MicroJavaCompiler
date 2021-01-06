@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 1/0/2021 21:46:19
+// 6/0/2021 20:6:21
 
 
 package rs.ac.bg.etf.pp1.ast;
@@ -8,13 +8,13 @@ package rs.ac.bg.etf.pp1.ast;
 public class SingleConstDecl extends ConstDecl {
 
     private Type Type;
-    private String I2;
+    private String constName;
     private Constant Constant;
 
-    public SingleConstDecl (Type Type, String I2, Constant Constant) {
+    public SingleConstDecl (Type Type, String constName, Constant Constant) {
         this.Type=Type;
         if(Type!=null) Type.setParent(this);
-        this.I2=I2;
+        this.constName=constName;
         this.Constant=Constant;
         if(Constant!=null) Constant.setParent(this);
     }
@@ -27,12 +27,12 @@ public class SingleConstDecl extends ConstDecl {
         this.Type=Type;
     }
 
-    public String getI2() {
-        return I2;
+    public String getConstName() {
+        return constName;
     }
 
-    public void setI2(String I2) {
-        this.I2=I2;
+    public void setConstName(String constName) {
+        this.constName=constName;
     }
 
     public Constant getConstant() {
@@ -75,7 +75,7 @@ public class SingleConstDecl extends ConstDecl {
             buffer.append(tab+"  null");
         buffer.append("\n");
 
-        buffer.append(" "+tab+I2);
+        buffer.append(" "+tab+constName);
         buffer.append("\n");
 
         if(Constant!=null)

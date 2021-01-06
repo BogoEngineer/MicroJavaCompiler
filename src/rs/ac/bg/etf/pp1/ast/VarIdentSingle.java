@@ -1,24 +1,24 @@
 // generated with ast extension for cup
 // version 0.8
-// 1/0/2021 21:46:19
+// 6/0/2021 20:6:21
 
 
 package rs.ac.bg.etf.pp1.ast;
 
 public class VarIdentSingle extends VarNoType {
 
-    private String I1;
+    private String varName;
 
-    public VarIdentSingle (String I1) {
-        this.I1=I1;
+    public VarIdentSingle (String varName) {
+        this.varName=varName;
     }
 
-    public String getI1() {
-        return I1;
+    public String getVarName() {
+        return varName;
     }
 
-    public void setI1(String I1) {
-        this.I1=I1;
+    public void setVarName(String varName) {
+        this.varName=varName;
     }
 
     public void accept(Visitor visitor) {
@@ -41,7 +41,7 @@ public class VarIdentSingle extends VarNoType {
         buffer.append(tab);
         buffer.append("VarIdentSingle(\n");
 
-        buffer.append(" "+tab+I1);
+        buffer.append(" "+tab+varName);
         buffer.append("\n");
 
         buffer.append(tab);

@@ -2,7 +2,7 @@
 
 program test301
 
-	const int nula = 0;
+	const int nula = 0, dva = 2;
 	const int jedan = 1;
 	const int pet = 5;
 
@@ -41,7 +41,7 @@ program test301
 		
 		bodovi = bodovi + (pet * jedan - 1) * (bodovi - 3 % 2 + 3 * 2) - 3; 
 		print(bodovi);
-			
+	
 		read(bodovi);
 		bt = true;
 		

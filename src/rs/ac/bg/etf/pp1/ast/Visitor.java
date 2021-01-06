@@ -1,20 +1,18 @@
 // generated with ast extension for cup
 // version 0.8
-// 1/0/2021 21:46:19
+// 6/0/2021 20:6:21
 
 
 package rs.ac.bg.etf.pp1.ast;
 
 public interface Visitor { 
 
-    public void visit(Unmatched Unmatched);
     public void visit(DeclarationList DeclarationList);
     public void visit(Extending Extending);
     public void visit(DesignatorFactor DesignatorFactor);
     public void visit(MethodDecl MethodDecl);
     public void visit(VarDeclSemi VarDeclSemi);
     public void visit(Constant Constant);
-    public void visit(Matched Matched);
     public void visit(Relop Relop);
     public void visit(MethodType MethodType);
     public void visit(FormalParamDecl FormalParamDecl);
@@ -22,11 +20,11 @@ public interface Visitor {
     public void visit(BraceMethodDeclBlock BraceMethodDeclBlock);
     public void visit(StatementBlock StatementBlock);
     public void visit(UnsignedExpr UnsignedExpr);
-    public void visit(VarNoType VarNoType);
     public void visit(StatementList StatementList);
+    public void visit(VarNoType VarNoType);
     public void visit(Factor Factor);
-    public void visit(CondTerm CondTerm);
     public void visit(MinusSign MinusSign);
+    public void visit(CondTerm CondTerm);
     public void visit(Designator Designator);
     public void visit(Term Term);
     public void visit(Condition Condition);
@@ -45,7 +43,6 @@ public interface Visitor {
     public void visit(ConstDecl ConstDecl);
     public void visit(CondFact CondFact);
     public void visit(Declaration Declaration);
-    public void visit(ConstDeclSemi ConstDeclSemi);
     public void visit(MethodDeclList MethodDeclList);
     public void visit(FormPars FormPars);
     public void visit(Modop Modop);
@@ -62,12 +59,10 @@ public interface Visitor {
     public void visit(Assignop Assignop);
     public void visit(SingleDesignator SingleDesignator);
     public void visit(DesignatorIndex DesignatorIndex);
-    public void visit(DesignatorField DesignatorField);
     public void visit(NewFactorArray NewFactorArray);
     public void visit(NewFactorSingle NewFactorSingle);
     public void visit(DesignatorActPars DesignatorActPars);
     public void visit(ParenExpr ParenExpr);
-    public void visit(FuncCall FuncCall);
     public void visit(New New);
     public void visit(BoolConst BoolConst);
     public void visit(CharConst CharConst);
@@ -93,26 +88,14 @@ public interface Visitor {
     public void visit(Actuals Actuals);
     public void visit(Decrement Decrement);
     public void visit(Increment Increment);
-    public void visit(Func Func);
     public void visit(AssignmentExpr AssignmentExpr);
     public void visit(SingleCase SingleCase);
     public void visit(MultiCase MultiCase);
-    public void visit(BlockStmt BlockStmt);
     public void visit(ReadStmt ReadStmt);
-    public void visit(ContinueStmt ContinueStmt);
-    public void visit(BreakStmt BreakStmt);
-    public void visit(SwitchStmt SwitchStmt);
     public void visit(DoWhileStmt DoWhileStmt);
-    public void visit(MatchedIf MatchedIf);
-    public void visit(ReturnNoExpr ReturnNoExpr);
-    public void visit(ReturnExpr ReturnExpr);
     public void visit(PrintStmt PrintStmt);
-    public void visit(MatchedDerived1 MatchedDerived1);
+    public void visit(StatementDerived1 StatementDerived1);
     public void visit(Assignment Assignment);
-    public void visit(UnmatchedIfElse UnmatchedIfElse);
-    public void visit(UnmatchedIf UnmatchedIf);
-    public void visit(UnmachedStmt UnmachedStmt);
-    public void visit(MatchedStmt MatchedStmt);
     public void visit(SingleStatement SingleStatement);
     public void visit(MultiStatement MultiStatement);
     public void visit(NoStmtBlck NoStmtBlck);
@@ -151,7 +134,7 @@ public interface Visitor {
     public void visit(NumberCon NumberCon);
     public void visit(SingleConstDecl SingleConstDecl);
     public void visit(MultiConstDecl MultiConstDecl);
-    public void visit(ConstDeclBlockSemi ConstDeclBlockSemi);
+    public void visit(ConstDeclSemi ConstDeclSemi);
     public void visit(ClassDeclaration ClassDeclaration);
     public void visit(ConstDeclaration ConstDeclaration);
     public void visit(VarDeclaration VarDeclaration);

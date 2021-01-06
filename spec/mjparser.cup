@@ -71,18 +71,21 @@ terminal ENUM, QMARK, CLASS;
 nonterminal MethodDeclList, VarDecl;
 nonterminal FormalParamList, FormalParamDecl, FormPars, ActualPars, ActualParamList; 
 nonterminal StatementList, Statement, Addop;
-nonterminal Unmatched, Matched;
 
-nonterminal Program, ProgName, Designator, MethodDecl, MethodTypeName, Declaration, MethodType, DesignatorStatement; 
-nonterminal Type, Term, Expr, Factor, VarDeclList, DesignatorFactor, MinusSign; 
+nonterminal Declaration, MethodType, DesignatorStatement; 
+nonterminal VarDeclList, DesignatorFactor, MinusSign; 
 
 nonterminal DeclarationList, ClassDecl, VarDeclSemi, ConstDecl, Constant, Extending, MethodDeclBlock, ConstDeclSemi;
 nonterminal SwitchCaseList, Condition, Assignop, VarNoType;
 nonterminal CondTerm, CondFact, UnsignedExpr, Mulop, NewFactor, Relop, VarDeclarationBlock, StatementBlock, Expr1, BraceMethodDeclBlock;
 
+
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName, Designator;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Factor, Expr;
+
 Program ::= (Program) PROG ProgName:p DeclarationList LBRACE MethodDeclBlock RBRACE;
 
-ProgName ::= (ProgName) IDENT:pName;
+ProgName ::= (ProgName) IDENT:progName;
 
 DeclarationList ::= (MultiDeclaration) DeclarationList Declaration
 						|
@@ -99,18 +102,18 @@ Declaration ::= (VarDeclaration) VarDeclSemi
 			   	 //{: parser.report_error("Izvrsen oporavak do ; u liniji " + gleft, null);  :} /* greska globalna def */
 					;
 
-ConstDeclSemi ::= (ConstDeclBlockSemi) ConstDecl SEMI;
+ConstDeclSemi ::= (ConstDeclSemi) ConstDecl SEMI;
 
-ConstDecl ::= (MultiConstDecl) ConstDecl COMMA IDENT EQUAL Constant
+ConstDecl ::= (MultiConstDecl) ConstDecl COMMA IDENT:constName EQUAL Constant:cnst
 				|
-			  (SingleConstDecl) CONST Type IDENT EQUAL Constant
+			  (SingleConstDecl) CONST Type:constType IDENT:constName EQUAL Constant:cnst
 			  	;  		
 			  	
-Constant ::= (NumberCon) NUMBER
+Constant ::= (NumberCon) NUMBER:num
 				|
-			  (CharCon) CHARCONST
+			  (CharCon) CHARCONST:chr
 			  	|
-			  (BoolCon) BOOLCONST
+			  (BoolCon) BOOLCONST:bol
 			  	;
 			  	
 VarDeclSemi ::= (VarDeclSemicolon) VarDeclList SEMI;
@@ -125,9 +128,9 @@ VarDeclList ::= (MultiVarDecl) VarDeclList COMMA VarNoType
 	
 VarDecl ::= (VarWithType) Type VarNoType;
 				
-VarNoType ::= (VarIdentSingle) IDENT
+VarNoType ::= (VarIdentSingle) IDENT:varName
 				|
-			  (VarIdentArray) IDENT LBRACKET RBRACKET
+			  (VarIdentArray) IDENT:varName LBRACKET RBRACKET
 			  	;
 
 Type ::= (Type) IDENT:typeName;
@@ -158,9 +161,9 @@ MethodDecl ::= (MethodDeclVars) MethodTypeName LPAREN FormPars RPAREN VarDeclara
 
 MethodTypeName ::= (MethodTypeName) MethodType:retType IDENT:methName;
 
-MethodType ::= (NonVoidType) Type 
+MethodType ::= (NonVoidType) Type:retType
 				| 
-			   (VoidType) VOID
+			   (VoidType) VOID:retType
 			   	;
 			   	
 VarDeclarationBlock ::= (MultiVarDeclSemi) VarDeclarationBlock VarDeclSemi
@@ -192,36 +195,17 @@ StatementList ::= (MultiStatement) StatementList Statement
 					|
 				  (SingleStatement) Statement
 				  	;
-
-Statement ::= (MatchedStmt) Matched | (UnmachedStmt) Unmatched ;
-
-Unmatched ::= (UnmatchedIf) IF LPAREN Condition RPAREN Statement | (UnmatchedIfElse) IF LPAREN Condition RPAREN Matched ELSE Unmatched;
-
-				  
-Matched ::= (Assignment) DesignatorStatement:dest SEMI 
+			  
+Statement ::= (Assignment) DesignatorStatement:dest SEMI 
 			  |
 			 error SEMI:l
 		   	 {: parser.report_error("Izvrsen oporavak do ; u liniji " + lleft, null);  :} /* iskaz dodele */
 		   	  |
 			(PrintStmt) PRINT LPAREN Expr RPAREN SEMI 
 			  |
-			(ReturnExpr) RETURN Expr:t SEMI
-			  |
-	  		(ReturnNoExpr) RETURN SEMI
-			  | 
-			(MatchedIf) IF LPAREN Condition RPAREN Matched ELSE Matched
-			  |
 			(DoWhileStmt) DO StatementBlock WHILE LPAREN Condition RPAREN SEMI
 			  |
-			(SwitchStmt) SWITCH LPAREN Expr RPAREN LBRACE SwitchCaseList RBRACE
-			  |
-			(BreakStmt) BREAK SEMI
-			  |
-			(ContinueStmt) CONTINUE SEMI
-			  |
 			(ReadStmt) READ LPAREN Designator RPAREN SEMI
-			  |
-			(BlockStmt) LBRACE StatementBlock RBRACE
 			  ;
 
 SwitchCaseList ::=  (MultiCase) SwitchCaseList CASE NUMBER COLON StatementList
@@ -230,9 +214,7 @@ SwitchCaseList ::=  (MultiCase) SwitchCaseList CASE NUMBER COLON StatementList
 				    	;
 
 DesignatorStatement ::= (AssignmentExpr) Designator Assignop Expr
-							|
-						(Func) Designator LPAREN ActualPars RPAREN
-							|
+							|							
 						(Increment) Designator DPLUS
 							|
 						(Decrement) Designator DMINUS
@@ -265,7 +247,7 @@ CondFact ::= (ExprCondFact) Expr
 
 Expr ::= (NormalExpr) Expr1
 			|
-		 (TernaryExpr) Expr1 QMARK Expr1 COLON Expr1 /* revizirano */
+		 (TernaryExpr) Expr1 QMARK Expr1:first COLON Expr1:second /* revizirano */
 		 	;
 
 Expr1 ::= (PosExpr1) UnsignedExpr
@@ -273,7 +255,7 @@ Expr1 ::= (PosExpr1) UnsignedExpr
 		  (NegExpr1) MINUS UnsignedExpr
 		  	;
 		 	
-UnsignedExpr ::= (AddExpr) UnsignedExpr Addop Term /* Ne moze sa ovim Relop onda */
+UnsignedExpr ::= (AddExpr) UnsignedExpr Addop Term
 		  			|		  		 	
 		 		 (TermExpr) Term
 		 			;
@@ -292,8 +274,6 @@ Factor ::= (Var) Designator
 		   (BoolConst) BOOLCONST
 		   	|
 		   (New) NewFactor
-		   	| 
-		   (FuncCall) DesignatorFactor
 		   	|
 		   (ParenExpr) LPAREN Expr RPAREN
 		   	;
@@ -306,9 +286,7 @@ NewFactor ::= (NewFactorSingle) NEW Type
 			  	;
 
 
-Designator ::= (DesignatorField) Designator DOT IDENT:name 
-				|
-			   (DesignatorIndex) Designator LBRACKET Expr RBRACKET 
+Designator ::= (DesignatorIndex) IDENT:name LBRACKET Expr RBRACKET 
 				|
 			   (SingleDesignator) IDENT:name
 				;

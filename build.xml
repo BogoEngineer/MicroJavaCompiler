@@ -8,6 +8,9 @@
 				<exclude name="util/Log4JUtils.java"/>
 				<exclude name="Yylex.java"/>
 				<exclude name="RuleVisitor.java"/>
+				<exclude name="SemanticAnalyzer.java"/>
+				<exclude name="SymbolTable.java"/>
+				<exclude name="Compiler.java"/>
 			</fileset>
 		</delete>
 		<delete>
@@ -34,6 +37,7 @@
 			<arg value="src.rs.ac.bg.etf.pp1.ast"/>
 			<arg value="-parser"/>
 			<arg value="MJParser"/>
+			<arg value="-dump_states"/>
 			<arg value="-buildtree"/>
 			<arg value="spec/mjparser.cup"/>
 		</java>
@@ -50,6 +54,7 @@
 				<pathelement path="lib/JFlex.jar"/>
 				<pathelement path="lib/cup_v10k.jar"/>
 				<pathelement path="lib/log4j-1.2.17.jar"/>
+				<pathelement path="lib/symboltable-1-1.jar"/>
 			</classpath>
 		</javac>
 

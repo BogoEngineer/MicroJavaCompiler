@@ -1,24 +1,24 @@
 // generated with ast extension for cup
 // version 0.8
-// 1/0/2021 21:46:19
+// 6/0/2021 20:6:21
 
 
 package rs.ac.bg.etf.pp1.ast;
 
 public class BoolCon extends Constant {
 
-    private String B1;
+    private String bol;
 
-    public BoolCon (String B1) {
-        this.B1=B1;
+    public BoolCon (String bol) {
+        this.bol=bol;
     }
 
-    public String getB1() {
-        return B1;
+    public String getBol() {
+        return bol;
     }
 
-    public void setB1(String B1) {
-        this.B1=B1;
+    public void setBol(String bol) {
+        this.bol=bol;
     }
 
     public void accept(Visitor visitor) {
@@ -41,7 +41,7 @@ public class BoolCon extends Constant {
         buffer.append(tab);
         buffer.append("BoolCon(\n");
 
-        buffer.append(" "+tab+B1);
+        buffer.append(" "+tab+bol);
         buffer.append("\n");
 
         buffer.append(tab);

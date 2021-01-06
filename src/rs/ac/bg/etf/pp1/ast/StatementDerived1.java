@@ -1,13 +1,13 @@
 // generated with ast extension for cup
 // version 0.8
-// 1/0/2021 21:46:19
+// 6/0/2021 20:6:21
 
 
 package rs.ac.bg.etf.pp1.ast;
 
-public class BreakStmt extends Matched {
+public class StatementDerived1 extends Statement {
 
-    public BreakStmt () {
+    public StatementDerived1 () {
     }
 
     public void accept(Visitor visitor) {
@@ -28,10 +28,10 @@ public class BreakStmt extends Matched {
     public String toString(String tab) {
         StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
-        buffer.append("BreakStmt(\n");
+        buffer.append("StatementDerived1(\n");
 
         buffer.append(tab);
-        buffer.append(") [BreakStmt]");
+        buffer.append(") [StatementDerived1]");
         return buffer.toString();
     }
 }
