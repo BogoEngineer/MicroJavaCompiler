@@ -241,7 +241,10 @@ SwitchCaseList ::=  (MultiCase) SwitchCaseList:S1 CASE NUMBER:N2 COLON Statement
 				    	;
 
 DesignatorStatement ::= (AssignmentExpr) Designator:D1 Assignop:A2 Expr:E3 {: RESULT=new AssignmentExpr(D1, A2, E3); RESULT.setLine(D1left); :}
-							|							
+							|
+						error SEMI:g
+			   	 		{: parser.report_error("Izvrsen oporavak do ; u liniji " + gleft, null);  :} {: RESULT=new DesignatorStatementDerived1(); :} /* greska iskaz dodele */		
+							|					
 						(Increment) Designator:D1 DPLUS {: RESULT=new Increment(D1); RESULT.setLine(D1left); :}
 							|
 						(Decrement) Designator:D1 DMINUS {: RESULT=new Decrement(D1); RESULT.setLine(D1left); :}

@@ -214,7 +214,10 @@ SwitchCaseList ::=  (MultiCase) SwitchCaseList CASE NUMBER COLON StatementList
 				    	;
 
 DesignatorStatement ::= (AssignmentExpr) Designator Assignop Expr
-							|							
+							|
+						error SEMI:g
+			   	 		{: parser.report_error("Izvrsen oporavak do ; u liniji " + gleft, null);  :} /* greska iskaz dodele */		
+							|					
 						(Increment) Designator DPLUS
 							|
 						(Decrement) Designator DMINUS

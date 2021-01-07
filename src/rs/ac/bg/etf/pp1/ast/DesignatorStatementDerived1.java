@@ -5,9 +5,9 @@
 
 package rs.ac.bg.etf.pp1.ast;
 
-public class VarDeclListDerived1 extends VarDeclList {
+public class DesignatorStatementDerived1 extends DesignatorStatement {
 
-    public VarDeclListDerived1 () {
+    public DesignatorStatementDerived1 () {
     }
 
     public void accept(Visitor visitor) {
@@ -28,10 +28,10 @@ public class VarDeclListDerived1 extends VarDeclList {
     public String toString(String tab) {
         StringBuffer buffer=new StringBuffer();
         buffer.append(tab);
-        buffer.append("VarDeclListDerived1(\n");
+        buffer.append("DesignatorStatementDerived1(\n");
 
         buffer.append(tab);
-        buffer.append(") [VarDeclListDerived1]");
+        buffer.append(") [DesignatorStatementDerived1]");
         return buffer.toString();
     }
 }
