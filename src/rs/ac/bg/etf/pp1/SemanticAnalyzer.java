@@ -171,7 +171,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	if(obj == SymbolTable.noObj){
 			report_error("Greska na liniji " + designator.getLine()+ " : ime "+designator.getName()+" nije deklarisano! ", null);
     	}
-    	designator.obj = obj;
+    	designator.struct = obj.getType();
+    	// report_info("Prenosi se od SingleDesignatora do Designatora: " + designator.struct.getKind(), null);
     }
     
 	public void visit(DesignatorIndex designator){
@@ -179,22 +180,165 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	if(obj == SymbolTable.noObj){
 			report_error("Greska na liniji " + designator.getLine()+ " : ime "+designator.getName()+" nije deklarisano! ", null);
     	}
-    	designator.obj = obj;
+    	designator.struct = obj.getType();
+    	// report_info("Prenosi se od DesignatorIndexa do Designatora: " + designator.struct.getKind(), null);
     }
     
     public void visit(AssignmentExpr assExpr){
+    	Struct exprType = assExpr.getExpr().struct;
     	if(assExpr.getDesignator() instanceof DesignatorIndex){
     		Obj designator = SymbolTable.find(((DesignatorIndex)assExpr.getDesignator()).getName());
     		Struct leftOperandType = designator.getType().getElemType();
-    		
-    	};
-    	Obj designator = SymbolTable.find(((SingleDesignator)assExpr.getDesignator()).getName());
-    	if(designator.getKind() != Obj.Var) {
-    		report_error("Naziv na levoj strani dodele mora oznacavati promenljivu!", assExpr);
+			// vec jeste promenljiva pa ne treba provera kao za ovo ispod
+	    	if(designator.getType() != exprType){
+	    		report_error("Operandi operacije dodele vrednosti moraju biti istog tipa!", assExpr);
+	    		return;
+	    	}
+    	}else {
+	   		Obj designator = SymbolTable.find(((SingleDesignator)assExpr.getDesignator()).getName());
+	    	if(designator.getKind() != Obj.Var) {
+	    		report_error("Naziv na levoj strani dodele mora oznacavati promenljivu!", assExpr);
+	    		return;
+	    	}
+	    	if(designator.getType() != exprType){
+	    		report_error("Operandi operacije dodele vrednosti moraju biti istog tipa!", assExpr);
+	    		return;
+	    	}
+    	}
+    }
+    
+    public void visit(Var var){
+    	Struct designatorType = var.getDesignator().struct;
+    	var.struct = SymbolTable.noType;
+    	if(designatorType == SymbolTable.noType) return; // vec izbacena greska
+    	var.struct = designatorType;
+    	// report_info("Prenosi se od designatora do Factora: " + var.struct.getKind(), null);
+    }
+    
+    public void visit(NumConst numCon){
+    	numCon.struct = SymbolTable.intType;
+    	// report_info("Number stavio u obj: " + numCon.struct.getKind(), null);
+    }
+    
+	public void visit(CharConst charCon){
+    	charCon.struct = SymbolTable.charType;
+    	// report_info("Char stavio u obj od Factora: " + charCon.struct.getKind(), null);
+    }
+    
+	public void visit(BoolConst boolCon){
+    	boolCon.struct = SymbolTable.boolType;
+    	// report_info("Bool stavio u obj od Factora: " + boolCon.struct.getKind(), null);
+    }
+    
+    public void visit(New newFactor){
+    	Struct newFactorType = newFactor.getNewFactor().struct;
+    	newFactor.struct = SymbolTable.noType;
+    	if(newFactorType == SymbolTable.noType) return; // vec izbacena greska
+    	newFactor.struct = newFactorType;
+    	// report_info("Prenosi se od NewFactora do Factora: " + newFactor.struct.getKind(), null);
+    }
+    
+    public void visit(ParenExpr pExpr){
+    	Struct exprType = pExpr.getExpr().struct;
+    	pExpr.struct = SymbolTable.noType;
+    	if(exprType == SymbolTable.noType) return; // vec izbacena greska
+    	pExpr.struct = exprType;
+    	// report_info("Prenosi se od ParenExpr do Factora: " + pExpr.struct.getKind(), null);
+    }
+    
+    public void visit(NewFactorSingle newFactorSingle){
+    	newFactorSingle.struct = SymbolTable.find(newFactorSingle.getType().getTypeName()).getType();
+    	// report_info("Prenosi se od NewFactoraSingle do NewFactora: " + newFactorSingle.struct.getKind(), null);
+    }
+    
+    public void visit(NewFactorArray newFactorArray){
+    	newFactorArray.struct = SymbolTable.find(newFactorArray.getType().getTypeName()+"[]").getType(); // dodato [] jer je tako oznaceno u tabeli simbola, npr. int[] za tip niza intova
+    	// report_info("Prenosi se od NewFactoraArray do NewFactora: " + newFactorArray.struct.getKind(), null);
+    }    
+    
+    public void visit(FactorTerm factorTerm){
+    	factorTerm.struct = factorTerm.getFactor().struct;
+    	// report_info("Prenosi se od Factora do Terma: " + factorTerm.struct.getKind(), null);
+    }
+    
+    public void visit(FactorMulopTerm factorMulopTerm){
+    	Struct factorType = factorMulopTerm.getFactor().struct;
+    	factorMulopTerm.struct = SymbolTable.noType;
+    	if(factorType == SymbolTable.noType) return; // vec je izbacena greska
+    	if(factorType != SymbolTable.intType){
+    		report_error("Operandi mulop operacije moraju biti celobrojnog tipa! ", factorMulopTerm);
     		return;
     	}
-    	
+    	if(factorMulopTerm.struct != factorType) {
+    		report_error("Operandi mulop operacije moraju biti istog tipa! ", factorMulopTerm);
+    		return;
+    	}
+    	factorMulopTerm.struct = factorType;
     }
+    
+    public void visit(AddExpr addExpr){
+    	Struct termType = addExpr.getTerm().struct;
+    	addExpr.struct = SymbolTable.noType;
+    	if(termType == SymbolTable.noType) return; // vec je izbacena greska
+    	if(termType != SymbolTable.intType) {
+    		addExpr.getTerm().struct = SymbolTable.noType;
+    		report_error("Operandi moraju biti celobrojnog tipa! ", addExpr);
+    		return;
+    	}
+    	addExpr.struct = termType;
+    }
+    
+    public void visit(TermExpr termExpr){
+    	Struct termType = termExpr.getTerm().struct;
+    	termExpr.struct = SymbolTable.noType;
+    	if(termType == SymbolTable.noType) return; // vec je izbacena greska
+  		// report_info("Prenosi se od TermExpra do UnsignedExpra: " + termType.getKind(), null);
+  		termExpr.struct = termType;
+    }
+    
+    public void visit(PosExpr1 posExpr1){
+		Struct unsignedExprType = posExpr1.getUnsignedExpr().struct;
+		posExpr1.struct = SymbolTable.noType;
+		if(unsignedExprType == SymbolTable.noType) return; // vec je izbacena greska
+		posExpr1.struct = unsignedExprType;
+	}
+	
+	public void visit(NegExpr1 negExpr1){
+		Struct unsignedExprType = negExpr1.getUnsignedExpr().struct;
+		negExpr1.struct = SymbolTable.noType;
+		if(unsignedExprType == SymbolTable.noType) return; // vec je izbacena greska
+		if(unsignedExprType != SymbolTable.intType){
+			negExpr1.struct = SymbolTable.noType;
+			report_error("Operand mora biti celobrojnog tipa! ", negExpr1);
+			return;
+		}
+		negExpr1.struct = unsignedExprType;
+	}
+	
+	public void visit(NormalExpr normalExpr){
+		Struct expr1Type = normalExpr.getExpr1().struct;
+		normalExpr.struct = SymbolTable.noType;
+		if(expr1Type == SymbolTable.noType) return; // vec je izbacena greska
+		normalExpr.struct = expr1Type;
+	}
+	
+	public void visit(TernaryExpr ternaryExpr){
+		Struct condition = ternaryExpr.getExpr1().struct;
+		Struct firstChoiceType = ternaryExpr.getExpr11().struct;
+		Struct secondChoiceType = ternaryExpr.getExpr12().struct;
+		if(firstChoiceType == SymbolTable.noType || secondChoiceType == SymbolTable.noType || condition == SymbolTable.noType) return; // vec izbacena greska
+		if(firstChoiceType != secondChoiceType){
+			report_error("Operandi ternarnog operatora moraju biti istog tipa! ", ternaryExpr);
+			ternaryExpr.struct = SymbolTable.noType;
+			return;
+		}
+		if(condition != SymbolTable.boolType){
+			report_error("Uslov ternarnog operatora mora biti tipa bool! ", ternaryExpr);
+			ternaryExpr.struct = SymbolTable.noType;
+			return;
+		}
+		ternaryExpr.struct = firstChoiceType; // svejedno od kog operanda ce uzeti tip, isti su
+	}
     
     /*public void visit(FuncCall funcCall){
     	Obj func = funcCall.getDesignator().obj;

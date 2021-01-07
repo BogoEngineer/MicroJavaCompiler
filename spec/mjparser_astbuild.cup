@@ -100,18 +100,15 @@ nonterminal Assignop Assignop;
 nonterminal VarNoType VarNoType;
 nonterminal CondTerm CondTerm;
 nonterminal CondFact CondFact;
-nonterminal UnsignedExpr UnsignedExpr;
 nonterminal Mulop Mulop;
-nonterminal NewFactor NewFactor;
 nonterminal Relop Relop;
 nonterminal VarDeclarationBlock VarDeclarationBlock;
 nonterminal StatementBlock StatementBlock;
-nonterminal Expr1 Expr1;
 nonterminal BraceMethodDeclBlock BraceMethodDeclBlock;
 
 
-nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName, Designator;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Factor, Expr;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
 
 Program ::= (Program) PROG ProgName:p DeclarationList:D1 LBRACE MethodDeclBlock:M2 RBRACE {: RESULT=new Program(p, D1, M2); RESULT.setLine(pleft); :};
 
@@ -277,7 +274,7 @@ CondFact ::= (ExprCondFact) Expr:E1 {: RESULT=new ExprCondFact(E1); RESULT.setLi
 
 Expr ::= (NormalExpr) Expr1:E1 {: RESULT=new NormalExpr(E1); RESULT.setLine(E1left); :}
 			|
-		 (TernaryExpr) Expr1:E1 QMARK Expr1:E2 COLON Expr1:E3 {: RESULT=new TernaryExpr(E1, E2, E3); RESULT.setLine(E1left); :} /* revizirano */
+		 (TernaryExpr) Expr1:E1 QMARK Expr1:first COLON Expr1:second {: RESULT=new TernaryExpr(E1, first, second); RESULT.setLine(E1left); :} /* revizirano */
 		 	;
 
 Expr1 ::= (PosExpr1) UnsignedExpr:U1 {: RESULT=new PosExpr1(U1); RESULT.setLine(U1left); :}

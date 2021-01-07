@@ -77,11 +77,11 @@ nonterminal VarDeclList, DesignatorFactor, MinusSign;
 
 nonterminal DeclarationList, ClassDecl, VarDeclSemi, ConstDecl, Constant, Extending, MethodDeclBlock, ConstDeclSemi;
 nonterminal SwitchCaseList, Condition, Assignop, VarNoType;
-nonterminal CondTerm, CondFact, UnsignedExpr, Mulop, NewFactor, Relop, VarDeclarationBlock, StatementBlock, Expr1, BraceMethodDeclBlock;
+nonterminal CondTerm, CondFact, Mulop, Relop, VarDeclarationBlock, StatementBlock, BraceMethodDeclBlock;
 
 
-nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName, Designator;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Factor, Expr;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
+nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
 
 Program ::= (Program) PROG ProgName:p DeclarationList LBRACE MethodDeclBlock RBRACE;
 
