@@ -81,7 +81,7 @@ nonterminal CondTerm, CondFact, Mulop, Relop, VarDeclarationBlock, StatementBloc
 
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
 
 Program ::= (Program) PROG ProgName:p DeclarationList LBRACE MethodDeclBlock RBRACE;
 
@@ -270,11 +270,11 @@ Term ::= (FactorMulopTerm) Term Mulop Factor
 
 Factor ::= (Var) Designator
 			|
-		   (NumConst) NUMBER
+		   (NumConst) NUMBER:num
 		   	|
-		   (CharConst) CHARCONST
+		   (CharConst) CHARCONST:chr
 		   	|
-		   (BoolConst) BOOLCONST
+		   (BoolConst) BOOLCONST:bl
 		   	|
 		   (New) NewFactor
 		   	|

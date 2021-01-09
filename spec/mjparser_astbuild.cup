@@ -108,7 +108,7 @@ nonterminal BraceMethodDeclBlock BraceMethodDeclBlock;
 
 
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
-nonterminal rs.etf.pp1.symboltable.concepts.Struct Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
 
 Program ::= (Program) PROG ProgName:p DeclarationList:D1 LBRACE MethodDeclBlock:M2 RBRACE {: RESULT=new Program(p, D1, M2); RESULT.setLine(pleft); :};
 
@@ -297,11 +297,11 @@ Term ::= (FactorMulopTerm) Term:T1 Mulop:M2 Factor:F3 {: RESULT=new FactorMulopT
 
 Factor ::= (Var) Designator:D1 {: RESULT=new Var(D1); RESULT.setLine(D1left); :}
 			|
-		   (NumConst) NUMBER:N1 {: RESULT=new NumConst(N1); RESULT.setLine(N1left); :}
+		   (NumConst) NUMBER:num {: RESULT=new NumConst(num); RESULT.setLine(numleft); :}
 		   	|
-		   (CharConst) CHARCONST:C1 {: RESULT=new CharConst(C1); RESULT.setLine(C1left); :}
+		   (CharConst) CHARCONST:chr {: RESULT=new CharConst(chr); RESULT.setLine(chrleft); :}
 		   	|
-		   (BoolConst) BOOLCONST:B1 {: RESULT=new BoolConst(B1); RESULT.setLine(B1left); :}
+		   (BoolConst) BOOLCONST:bl {: RESULT=new BoolConst(bl); RESULT.setLine(blleft); :}
 		   	|
 		   (New) NewFactor:N1 {: RESULT=new New(N1); RESULT.setLine(N1left); :}
 		   	|

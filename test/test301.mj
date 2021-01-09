@@ -5,6 +5,7 @@ program test301
 	const int nula = 0, dva = 2;
 	const int jedan = 1;
 	const int pet = 5;
+	// const bool greska = 5;
 
 	int niz[];
 	char nizch[];
@@ -13,6 +14,7 @@ program test301
 	void main()	
 		int bodovi;
 		bool bt;
+		// xd a;
 	{
 		bodovi = 0;
 		bodovi++;
@@ -44,6 +46,18 @@ program test301
 		print(bt ? bodovi : bodovi + 10);
 		print(false ? bodovi + 20 : bodovi + 30);
 		print(true ? 'c' : '-');
+		
+		// bodovi[5]; ne prijavljuje gresku ali se ne parsira
+		// niz['c'] = 5;
+		// niz = new char[3];
+		// bodovi = 'c' * 5;
+		// bt = true ? 5 : 'x';
+		// bodovi = bodovi + 'c';
+		// bodovi = -false;
+		// print(nizch);
+		// read(niz);
+		// nizch++;
+		// niz = null; nije prepoznato null uopste, ostalo radi
 	}
 }
 

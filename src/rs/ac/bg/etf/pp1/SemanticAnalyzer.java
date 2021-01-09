@@ -16,6 +16,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	boolean errorDetected = false;
 	boolean mainMethodCondition = false;
 	Obj currentCalledMethod = null;
+	int nVars;
 	
 	Type constType = null;
 	
@@ -45,7 +46,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		if(varSignature instanceof VarIdentSingle){
 			report_info("Deklarisana promenljiva "+ ((VarIdentSingle)varSignature).getVarName(), varDecl);
 			if(SymbolTable.findInThisScope(((VarIdentSingle)varSignature).getVarName()) != SymbolTable.noObj) report_error("Promenljiva moze biti deklarisana samo jednom!", varDecl);
-			else {Obj varNode = SymbolTable.insert(Obj.Var, ((VarIdentSingle)varSignature).getVarName(), varDecl.getType().struct);}
+			else {Obj varNode = SymbolTable.insert(Obj.Var, ((VarIdentSingle)varSignature).getVarName(), varDecl.getType().obj.getType());}
 		}
 		if(varSignature instanceof VarIdentArray){
 			Struct type = SymbolTable.nullType;
@@ -64,6 +65,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     }
     
     public void visit(Program program){
+    	nVars = SymbolTable.currentScope.getnVars();
     	SymbolTable.chainLocalSymbols(program.getProgName().obj);
     	SymbolTable.closeScope();
     	if(!mainMethodCondition) report_error("Ne postoji main funkcija bez povratnog tipa i bez argumenata", null);
@@ -73,8 +75,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	constType = singleConstDecl.getType();
     	Obj constTypeNode = SymbolTable.find(constType.getTypeName()); // objektni cvor tipa konstante
     	Constant con = singleConstDecl.getConstant();
-    	Obj requiredType = null;
-    	Struct structType = null;
+    	Obj requiredType = SymbolTable.noObj;
+    	Struct structType = SymbolTable.noType;
     	if(con instanceof NumberCon){
     		 requiredType = SymbolTable.find("int");
     		 structType = SymbolTable.intType; 
@@ -97,8 +99,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
    	public void visit(MultiConstDecl multiConstDecl){
    		Obj constTypeNode = SymbolTable.find(constType.getTypeName()); // objektni cvor tipa konstante
    		Constant con = multiConstDecl.getConstant();
-   		Obj requiredType = null;
-    	Struct structType = null;
+   		Obj requiredType = SymbolTable.noObj;
+    	Struct structType = SymbolTable.noType;
     	if(con instanceof NumberCon){
     		 requiredType = SymbolTable.find("int");
     		 structType = SymbolTable.intType; 
@@ -126,13 +128,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	Obj typeNode = SymbolTable.find(type.getTypeName());
     	if(typeNode == SymbolTable.noObj){
     		report_error("Nije pronadjen tip " + type.getTypeName() + " u tabeli simbola! ", null);
-    		type.struct = SymbolTable.noType;
+    		type.obj = SymbolTable.noObj;
     	}else{
     		if(Obj.Type == typeNode.getKind()){
-    			type.struct = typeNode.getType();
+    			type.obj = typeNode;
     		}else{
     			report_error("Greska: Ime " + type.getTypeName() + " ne predstavlja tip!", type);
-    			type.struct = SymbolTable.noType;
+    			type.obj = SymbolTable.noObj;
     		}
     	}
     }
@@ -168,12 +170,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	if(obj == SymbolTable.noObj){
 			report_error("Greska na liniji " + designator.getLine()+ " : ime "+designator.getName()+" nije deklarisano! ", null);
     	}
-    	designator.struct = obj.getType();
-    	// report_info("Prenosi se od SingleDesignatora do Designatora: " + designator.struct.getKind(), null);
+    	designator.obj = obj;
     }
     
 	public void visit(DesignatorIndex designator){
-		Struct exprType = designator.getExpr().struct;
+		Obj exprObj = designator.getExpr().obj;
    		Obj obj = SymbolTable.find(designator.getName());
     	if(obj == SymbolTable.noObj){
 			report_error("Greska na liniji " + designator.getLine()+ " : ime "+designator.getName()+" nije deklarisano! ", null);
@@ -181,20 +182,19 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	if(obj.getType().getKind() != Struct.Array){
     		report_error("Ne moze se indeksirati promenljiva " + obj.getName() + " jer nije tipa niz!", designator);
     	}
-    	if(exprType != SymbolTable.intType){
+    	if(exprObj.getType() != SymbolTable.intType){
     		report_error("Ne moze se indeksirati promenljiva " + obj.getName() + " jer izraz za indeksiranje nije tipa int!", designator);
     	}
-    	designator.struct = obj.getType().getElemType(); // uzima se tip jednog elementa u nizu
-    	// report_info("Prenosi se od DesignatorIndexa do Designatora: " + designator.struct.getKind(), null);
+    	designator.obj = new Obj(Obj.Var, "", obj.getType().getElemType()); // uzima se tip jednog elementa u nizu
     }
     
     public void visit(AssignmentExpr assExpr){
-    	Struct exprType = assExpr.getExpr().struct;
+    	Obj exprObj = assExpr.getExpr().obj;
     	if(assExpr.getDesignator() instanceof DesignatorIndex){
     		Obj designator = SymbolTable.find(((DesignatorIndex)assExpr.getDesignator()).getName());
     		Struct leftOperandType = designator.getType().getElemType(); // uzima se tip promenljive elementa niza
 			// vec jeste promenljiva pa ne treba provera kao za ovo ispod
-	    	if(leftOperandType != exprType){
+	    	if(leftOperandType != exprObj.getType() && exprObj.getType() != SymbolTable.nullType){ // ako se nizu (referenci) dodeljuje null to je legalno
 	    		report_error("Operandi operacije dodele vrednosti moraju biti istog tipa! ", assExpr);
 	    		return;
 	    	}
@@ -204,7 +204,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	    		report_error("Naziv na levoj strani dodele mora oznacavati promenljivu!", assExpr);
 	    		return;
 	    	}
-	    	if(designator.getType() != exprType){
+	    	if(designator.getType() != exprObj.getType()){
 	    		report_error("Operandi operacije dodele vrednosti moraju biti istog tipa!", assExpr);
 	    		return;
 	    	}
@@ -212,120 +212,115 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     }
     
     public void visit(Var var){
-    	Struct designatorType = var.getDesignator().struct;
-    	var.struct = SymbolTable.noType;
-    	if(designatorType == SymbolTable.noType) return; // vec izbacena greska
-    	var.struct = designatorType;
-    	// report_info("Prenosi se od designatora do Factora: " + var.struct.getKind(), null);
+    	Obj designatorObj = var.getDesignator().obj;
+    	var.obj = SymbolTable.noObj;
+    	if(designatorObj == SymbolTable.noObj) return; // vec izbacena greska
+    	var.obj = designatorObj;
     }
     
     public void visit(NumConst numCon){
-    	numCon.struct = SymbolTable.intType;
-    	// report_info("Number stavio u obj: " + numCon.struct.getKind(), null);
+    	numCon.obj = new Obj(Obj.Con, "$", SymbolTable.intType);
     }
     
 	public void visit(CharConst charCon){
-    	charCon.struct = SymbolTable.charType;
-    	// report_info("Char stavio u obj od Factora: " + charCon.struct.getKind(), null);
+    	charCon.obj = new Obj(Obj.Con, "$", SymbolTable.charType);
     }
     
 	public void visit(BoolConst boolCon){
-    	boolCon.struct = SymbolTable.boolType;
-    	// report_info("Bool stavio u obj od Factora: " + boolCon.struct.getKind(), null);
+    	boolCon.obj = new Obj(Obj.Con, "$", SymbolTable.boolType);
     }
     
     public void visit(New newFactor){
-    	Struct newFactorType = newFactor.getNewFactor().struct;
-    	newFactor.struct = SymbolTable.noType;
-    	if(newFactorType == SymbolTable.noType) return; // vec izbacena greska
-    	newFactor.struct = newFactorType;
-    	// report_info("Prenosi se od NewFactora do Factora: " + newFactor.struct.getKind(), null);
+    	Obj newFactorObj = newFactor.getNewFactor().obj;
+    	newFactor.obj = SymbolTable.noObj;
+    	if(newFactorObj == SymbolTable.noObj) return; // vec izbacena greska
+    	newFactor.obj = newFactorObj;
     }
     
     public void visit(ParenExpr pExpr){
-    	Struct exprType = pExpr.getExpr().struct;
-    	pExpr.struct = SymbolTable.noType;
-    	if(exprType == SymbolTable.noType) return; // vec izbacena greska
-    	pExpr.struct = exprType;
-    	// report_info("Prenosi se od ParenExpr do Factora: " + pExpr.struct.getKind(), null);
+    	Obj exprObj = pExpr.getExpr().obj;
+    	pExpr.obj = SymbolTable.noObj;
+    	if(exprObj == SymbolTable.noObj) return; // vec izbacena greska
+    	pExpr.obj = exprObj;
     }
     
     public void visit(NewFactorSingle newFactorSingle){
-    	newFactorSingle.struct = SymbolTable.find(newFactorSingle.getType().getTypeName()).getType();
-    	// report_info("Prenosi se od NewFactoraSingle do NewFactora: " + newFactorSingle.struct.getKind(), null);
+    	newFactorSingle.obj = SymbolTable.find(newFactorSingle.getType().getTypeName());
     }
     
     public void visit(NewFactorArray newFactorArray){
-    	Struct exprType = newFactorArray.getExpr().struct;
-    	if(exprType != SymbolTable.intType) report_error("Izraz unutar [ ] mora biti int!", newFactorArray);
-    	newFactorArray.struct = SymbolTable.find(newFactorArray.getType().getTypeName()+"[]").getType(); // dodato [] jer je tako oznaceno u tabeli simbola, npr. int[] za tip niza intova
-    	// report_info("Prenosi se od NewFactoraArray do NewFactora: " + newFactorArray.struct.getKind(), null);
+    	Obj exprObj = newFactorArray.getExpr().obj;
+    	if(exprObj.getType() != SymbolTable.intType) report_error("Izraz unutar [ ] mora biti int!", newFactorArray);
+    	Struct arrayElemType = newFactorArray.getType().obj.getType();
+    	String typeName = "";
+    	if(arrayElemType == SymbolTable.intType) typeName = "int[]";
+    	if(arrayElemType == SymbolTable.charType) typeName = "char[]";
+    	if(arrayElemType == SymbolTable.boolType) typeName = "bool[]";
+    	newFactorArray.obj = SymbolTable.find(typeName);
     }    
     
     public void visit(FactorTerm factorTerm){
-    	factorTerm.struct = factorTerm.getFactor().struct;
-    	// report_info("Prenosi se od Factora do Terma: " + factorTerm.struct.getKind(), null);
+    	factorTerm.obj = factorTerm.getFactor().obj;
     }
     
     public void visit(FactorMulopTerm factorMulopTerm){
-    	Struct factorType = factorMulopTerm.getFactor().struct;
-    	if(factorMulopTerm.struct == null) factorMulopTerm.struct = factorMulopTerm.getTerm().struct; // ako nema tipa uzmi tip od prvog Terma
-    	if(factorType == SymbolTable.noType) return; // vec je izbacena greska
-    	if(factorType != SymbolTable.intType){
+    	Obj factorObj = factorMulopTerm.getFactor().obj;
+    	if(factorMulopTerm.obj == null) factorMulopTerm.obj = factorMulopTerm.getTerm().obj; // ako nema obj uzmi obj od prvog Terma
+    	if(factorObj == SymbolTable.noObj) return; // vec je izbacena greska
+    	if(factorObj.getType() != SymbolTable.intType){
     		report_error("Operandi mulop operacije moraju biti celobrojnog tipa! ", factorMulopTerm);
     		return;
     	}
-    	if(factorMulopTerm.struct != factorType) {
-    		report_error("Operandi mulop operacije moraju biti istog tipa! " + factorType.getKind() + factorMulopTerm.struct.getKind(), factorMulopTerm);
+    	if(factorMulopTerm.obj.getType() != factorObj.getType()) {
+    		report_error("Operandi mulop operacije moraju biti istog tipa! " + factorObj.getType().getKind() + factorMulopTerm.obj.getType().getKind(), factorMulopTerm);
     		return;
     	}
-    	factorMulopTerm.struct = factorType;
+    	factorMulopTerm.obj = factorObj;
     }
     
     public void visit(AddExpr addExpr){
-    	Struct termType = addExpr.getTerm().struct;
-    	addExpr.struct = SymbolTable.noType;
-    	if(termType == SymbolTable.noType) return; // vec je izbacena greska
-    	if(termType != SymbolTable.intType) {
-    		addExpr.getTerm().struct = SymbolTable.noType;
+    	Obj termObj = addExpr.getTerm().obj;
+    	addExpr.obj = SymbolTable.noObj;
+    	if(termObj == SymbolTable.noObj) return; // vec je izbacena greska
+    	if(termObj.getType() != SymbolTable.intType) {
+    		addExpr.getTerm().obj = SymbolTable.noObj;
     		report_error("Operandi moraju biti celobrojnog tipa! ", addExpr);
     		return;
     	}
-    	addExpr.struct = termType;
+    	addExpr.obj = termObj;
     }
     
     public void visit(TermExpr termExpr){
-    	Struct termType = termExpr.getTerm().struct;
-    	termExpr.struct = SymbolTable.noType;
-    	if(termType == SymbolTable.noType) return; // vec je izbacena greska
-  		// report_info("Prenosi se od TermExpra do UnsignedExpra: " + termType.getKind(), null);
-  		termExpr.struct = termType;
+    	Obj termObj = termExpr.getTerm().obj;
+    	termExpr.obj = SymbolTable.noObj;
+    	if(termObj == SymbolTable.noObj) return; // vec je izbacena greska
+  		termExpr.obj = termObj;
     }
     
     public void visit(PosExpr1 posExpr1){
-		Struct unsignedExprType = posExpr1.getUnsignedExpr().struct;
-		posExpr1.struct = SymbolTable.noType;
-		if(unsignedExprType == SymbolTable.noType) return; // vec je izbacena greska
-		posExpr1.struct = unsignedExprType;
+		Obj unsignedExprObj = posExpr1.getUnsignedExpr().obj;
+		posExpr1.obj = SymbolTable.noObj;
+		if(unsignedExprObj == SymbolTable.noObj) return; // vec je izbacena greska
+		posExpr1.obj = unsignedExprObj;
 	}
 	
 	public void visit(NegExpr1 negExpr1){
-		Struct unsignedExprType = negExpr1.getUnsignedExpr().struct;
-		negExpr1.struct = SymbolTable.noType;
-		if(unsignedExprType == SymbolTable.noType) return; // vec je izbacena greska
-		if(unsignedExprType != SymbolTable.intType){
-			negExpr1.struct = SymbolTable.noType;
+		Obj unsignedExprObj = negExpr1.getUnsignedExpr().obj;
+		negExpr1.obj = SymbolTable.noObj;
+		if(unsignedExprObj == SymbolTable.noObj) return; // vec je izbacena greska
+		if(unsignedExprObj.getType() != SymbolTable.intType){
+			negExpr1.obj = SymbolTable.noObj;
 			report_error("Operand mora biti celobrojnog tipa! ", negExpr1);
 			return;
 		}
-		negExpr1.struct = unsignedExprType;
+		negExpr1.obj = unsignedExprObj;
 	}
 	
 	public void visit(NormalExpr normalExpr){
-		Struct expr1Type = normalExpr.getExpr1().struct;
-		normalExpr.struct = SymbolTable.noType;
-		if(expr1Type == SymbolTable.noType) return; // vec je izbacena greska
-		normalExpr.struct = expr1Type;
+		Obj expr1Obj = normalExpr.getExpr1().obj;
+		normalExpr.obj = SymbolTable.noObj;
+		if(expr1Obj == SymbolTable.noObj) return; // vec je izbacena greska
+		normalExpr.obj = expr1Obj;
 		
 		/* if(currentCalledMethod == null) return;
 		if(currentCalledMethod.getName() == "chr" && expr1Type!=SymbolTable.intType || 
@@ -337,25 +332,25 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	}
 	
 	public void visit(TernaryExpr ternaryExpr){
-		Struct condition = ternaryExpr.getExpr1().struct;
-		Struct firstChoiceType = ternaryExpr.getExpr11().struct;
-		Struct secondChoiceType = ternaryExpr.getExpr12().struct;
-		if(firstChoiceType == SymbolTable.noType || secondChoiceType == SymbolTable.noType || condition == SymbolTable.noType) return; // vec izbacena greska
-		if(firstChoiceType != secondChoiceType){
+		Obj conditionObj = ternaryExpr.getExpr1().obj;
+		Obj firstChoiceObj = ternaryExpr.getExpr11().obj;
+		Obj secondChoiceObj = ternaryExpr.getExpr12().obj;
+		if(firstChoiceObj == SymbolTable.noObj || secondChoiceObj == SymbolTable.noObj || conditionObj == SymbolTable.noObj) return; // vec izbacena greska
+		if(firstChoiceObj.getType() != secondChoiceObj.getType()){
 			report_error("Operandi ternarnog operatora moraju biti istog tipa! ", ternaryExpr);
-			ternaryExpr.struct = SymbolTable.noType;
+			ternaryExpr.obj = SymbolTable.noObj;
 			return;
 		}
-		if(condition != SymbolTable.boolType){
+		if(conditionObj.getType() != SymbolTable.boolType){
 			report_error("Uslov ternarnog operatora mora biti tipa bool! ", ternaryExpr);
-			ternaryExpr.struct = SymbolTable.noType;
+			ternaryExpr.obj = SymbolTable.noObj;
 			return;
 		}
-		ternaryExpr.struct = firstChoiceType; // svejedno od kog operanda ce uzeti tip, isti su
+		ternaryExpr.obj = firstChoiceObj; // svejedno od kog operanda ce uzeti tip, isti su
 	}
     
     public void visit(PrintStmt prnt){
-    	Struct exprType = prnt.getExpr().struct;
+    	Struct exprType = prnt.getExpr().obj.getType();
     	if(exprType != SymbolTable.intType && exprType != SymbolTable.boolType && exprType != SymbolTable.charType) 
     		report_error("Argument funkcije print mora biti int, char ili bool! ", prnt);
     }
@@ -363,7 +358,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(ReadStmt rd){
     	if(rd.getDesignator() instanceof DesignatorIndex) return; // sve je vec u redu ako je element niza
     	Obj obj = SymbolTable.find(((SingleDesignator)rd.getDesignator()).getName());
-    	if(obj.getKind() != Obj.Var) report_error("Argument funkcije read mora biti promenljiva ili element niza! ", rd);
+    	if(obj.getType().getKind() == Struct.Array || obj.getKind() != Obj.Var) report_error("Argument funkcije read mora biti promenljiva ili element niza! ", rd);
     }
     
     public void visit(Increment inc){
