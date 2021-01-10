@@ -58,6 +58,7 @@ program test301
 		// read(niz);
 		// nizch++;
 		// niz = null; nije prepoznato null uopste, ostalo radi
+		// bodovi = new int[5];
 	}
 }
 

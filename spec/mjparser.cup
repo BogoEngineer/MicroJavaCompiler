@@ -79,7 +79,7 @@ nonterminal DeclarationList, ClassDecl, VarDeclSemi, ConstDecl, Constant, Extend
 nonterminal SwitchCaseList, Condition, Assignop, VarNoType;
 nonterminal CondTerm, CondFact, Mulop, Relop, VarDeclarationBlock, StatementBlock, BraceMethodDeclBlock;
 
-
+nonterminal DesignatorName, LeftParen;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
 
@@ -278,8 +278,10 @@ Factor ::= (Var) Designator
 		   	|
 		   (New) NewFactor
 		   	|
-		   (ParenExpr) LPAREN Expr RPAREN
+		   (ParenExpr) LeftParen Expr RPAREN
 		   	;
+		   	
+LeftParen ::= (LeftParen) LPAREN;
 
 DesignatorFactor ::= (DesignatorActPars) Designator LPAREN ActualPars RPAREN;
 
@@ -289,10 +291,12 @@ NewFactor ::= (NewFactorSingle) NEW Type
 			  	;
 
 
-Designator ::= (DesignatorIndex) IDENT:name LBRACKET Expr RBRACKET 
+Designator ::= (DesignatorIndex) DesignatorName LBRACKET Expr RBRACKET 
 				|
-			   (SingleDesignator) IDENT:name
+			   (SingleDesignator) DesignatorName
 				;
+				
+DesignatorName ::= (DesignatorName) IDENT:name;
 					
 Assignop ::= (Assignop) EQUAL;
 

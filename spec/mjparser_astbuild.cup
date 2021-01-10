@@ -106,7 +106,8 @@ nonterminal VarDeclarationBlock VarDeclarationBlock;
 nonterminal StatementBlock StatementBlock;
 nonterminal BraceMethodDeclBlock BraceMethodDeclBlock;
 
-
+nonterminal DesignatorName DesignatorName;
+nonterminal LeftParen LeftParen;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
 
@@ -305,8 +306,10 @@ Factor ::= (Var) Designator:D1 {: RESULT=new Var(D1); RESULT.setLine(D1left); :}
 		   	|
 		   (New) NewFactor:N1 {: RESULT=new New(N1); RESULT.setLine(N1left); :}
 		   	|
-		   (ParenExpr) LPAREN Expr:E1 RPAREN {: RESULT=new ParenExpr(E1); RESULT.setLine(E1left); :}
+		   (ParenExpr) LeftParen:L1 Expr:E2 RPAREN {: RESULT=new ParenExpr(L1, E2); RESULT.setLine(L1left); :}
 		   	;
+		   	
+LeftParen ::= (LeftParen) LPAREN {: RESULT=new LeftParen(); :};
 
 DesignatorFactor ::= (DesignatorActPars) Designator:D1 LPAREN ActualPars:A2 RPAREN {: RESULT=new DesignatorActPars(D1, A2); RESULT.setLine(D1left); :};
 
@@ -316,10 +319,12 @@ NewFactor ::= (NewFactorSingle) NEW Type:T1 {: RESULT=new NewFactorSingle(T1); R
 			  	;
 
 
-Designator ::= (DesignatorIndex) IDENT:name LBRACKET Expr:E1 RBRACKET {: RESULT=new DesignatorIndex(name, E1); RESULT.setLine(nameleft); :} 
+Designator ::= (DesignatorIndex) DesignatorName:D1 LBRACKET Expr:E2 RBRACKET {: RESULT=new DesignatorIndex(D1, E2); RESULT.setLine(D1left); :} 
 				|
-			   (SingleDesignator) IDENT:name {: RESULT=new SingleDesignator(name); RESULT.setLine(nameleft); :}
+			   (SingleDesignator) DesignatorName:D1 {: RESULT=new SingleDesignator(D1); RESULT.setLine(D1left); :}
 				;
+				
+DesignatorName ::= (DesignatorName) IDENT:name {: RESULT=new DesignatorName(name); RESULT.setLine(nameleft); :};
 					
 Assignop ::= (Assignop) EQUAL {: RESULT=new Assignop(); :};
 

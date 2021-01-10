@@ -1,27 +1,28 @@
 // generated with ast extension for cup
 // version 0.8
-// 9/0/2021 21:42:45
+// 10/0/2021 17:14:22
 
 
 package rs.ac.bg.etf.pp1.ast;
 
 public class DesignatorIndex extends Designator {
 
-    private String name;
+    private DesignatorName DesignatorName;
     private Expr Expr;
 
-    public DesignatorIndex (String name, Expr Expr) {
-        this.name=name;
+    public DesignatorIndex (DesignatorName DesignatorName, Expr Expr) {
+        this.DesignatorName=DesignatorName;
+        if(DesignatorName!=null) DesignatorName.setParent(this);
         this.Expr=Expr;
         if(Expr!=null) Expr.setParent(this);
     }
 
-    public String getName() {
-        return name;
+    public DesignatorName getDesignatorName() {
+        return DesignatorName;
     }
 
-    public void setName(String name) {
-        this.name=name;
+    public void setDesignatorName(DesignatorName DesignatorName) {
+        this.DesignatorName=DesignatorName;
     }
 
     public Expr getExpr() {
@@ -37,15 +38,18 @@ public class DesignatorIndex extends Designator {
     }
 
     public void childrenAccept(Visitor visitor) {
+        if(DesignatorName!=null) DesignatorName.accept(visitor);
         if(Expr!=null) Expr.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
+        if(DesignatorName!=null) DesignatorName.traverseTopDown(visitor);
         if(Expr!=null) Expr.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
+        if(DesignatorName!=null) DesignatorName.traverseBottomUp(visitor);
         if(Expr!=null) Expr.traverseBottomUp(visitor);
         accept(visitor);
     }
@@ -55,7 +59,10 @@ public class DesignatorIndex extends Designator {
         buffer.append(tab);
         buffer.append("DesignatorIndex(\n");
 
-        buffer.append(" "+tab+name);
+        if(DesignatorName!=null)
+            buffer.append(DesignatorName.toString("  "+tab));
+        else
+            buffer.append(tab+"  null");
         buffer.append("\n");
 
         if(Expr!=null)

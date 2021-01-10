@@ -1,5 +1,7 @@
 package rs.ac.bg.etf.pp1;
 
+import java.util.Collection;
+
 import rs.etf.pp1.symboltable.*;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Scope;
@@ -29,5 +31,24 @@ class SymbolTable extends Tab {
 			if (resultObj != null) return resultObj;
 		}
 		return noObj;
+	}
+	
+	public static Obj findInProgram(Obj program, String name) {
+		Obj resultObj = noObj;
+		Collection<Obj> programSymbols = program.getLocalSymbols();
+		Obj mainObj = noObj;
+		if(programSymbols != null) {
+			for(Obj obj: programSymbols) {
+				if(obj.getName().equals("main")) mainObj = obj;
+				if(obj.getName().equals(name)) resultObj = obj;
+			}
+		}
+		Collection<Obj> mainSymbols = mainObj.getLocalSymbols();
+		if(mainSymbols != null) {
+			for(Obj obj: mainSymbols) {
+				if(obj.getName().equals(name)) resultObj = obj;
+			}
+		}
+		return resultObj;
 	}
 }

@@ -40,13 +40,15 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	}
 	
 	public void visit(VarWithType varDecl){
-		varDeclCount++;
 		VarNoType varSignature = varDecl.getVarNoType();
 		String varType = varDecl.getType().getTypeName();
 		if(varSignature instanceof VarIdentSingle){
 			report_info("Deklarisana promenljiva "+ ((VarIdentSingle)varSignature).getVarName(), varDecl);
 			if(SymbolTable.findInThisScope(((VarIdentSingle)varSignature).getVarName()) != SymbolTable.noObj) report_error("Promenljiva moze biti deklarisana samo jednom!", varDecl);
-			else {Obj varNode = SymbolTable.insert(Obj.Var, ((VarIdentSingle)varSignature).getVarName(), varDecl.getType().obj.getType());}
+			else {
+				Obj varNode = SymbolTable.insert(Obj.Var, ((VarIdentSingle)varSignature).getVarName(), varDecl.getType().obj.getType());
+				varNode.setAdr(varDeclCount++);
+			}
 		}
 		if(varSignature instanceof VarIdentArray){
 			Struct type = SymbolTable.nullType;
@@ -56,6 +58,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			report_info("Deklarisana (niz) promenljiva "+ ((VarIdentArray)varSignature).getVarName(), varDecl);
 			if(SymbolTable.findInThisScope(((VarIdentArray)varSignature).getVarName()) != SymbolTable.noObj) report_error("Promenljiva moze biti deklarisana samo jednom!", varDecl);
 			Obj varNode = SymbolTable.insert(Obj.Var, ((VarIdentArray)varSignature).getVarName(), type);
+			varNode.setAdr(varDeclCount++);
 		}
 	}
 	
@@ -77,22 +80,27 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	Constant con = singleConstDecl.getConstant();
     	Obj requiredType = SymbolTable.noObj;
     	Struct structType = SymbolTable.noType;
+    	int val = 0;
     	if(con instanceof NumberCon){
     		 requiredType = SymbolTable.find("int");
     		 structType = SymbolTable.intType; 
+    		 val = ((NumberCon)con).getNum();
     	}
     	if(con instanceof CharCon){
     		requiredType = SymbolTable.find("char"); 
     		structType = SymbolTable.charType;
+    		val = ((CharCon)con).getChr();
     	}
     	if(con instanceof BoolCon){
     		requiredType = SymbolTable.find("bool"); 
     		structType = SymbolTable.boolType;
+    		val = ((BoolCon)con).getBol().equals("true") ? 1 : 0;
     	}
     	if(constTypeNode != requiredType){
     		report_error("Tip konstante " + singleConstDecl.getConstName() + " ne odgovara navedenom tipu! Na liniji: " + con.getLine(), null);
     	}else{
-    		SymbolTable.insert(Obj.Con, singleConstDecl.getConstName(), structType);
+    		Obj in = SymbolTable.insert(Obj.Con, singleConstDecl.getConstName(), structType);
+    		in.setAdr(val);
     	}
     }
    
@@ -101,22 +109,27 @@ public class SemanticAnalyzer extends VisitorAdaptor {
    		Constant con = multiConstDecl.getConstant();
    		Obj requiredType = SymbolTable.noObj;
     	Struct structType = SymbolTable.noType;
+    	int val = 0;
     	if(con instanceof NumberCon){
     		 requiredType = SymbolTable.find("int");
     		 structType = SymbolTable.intType; 
+    		 val = ((NumberCon)con).getNum();
     	}
     	if(con instanceof CharCon){
     		requiredType = SymbolTable.find("char"); 
     		structType = SymbolTable.charType;
+    		val = ((CharCon)con).getChr();
     	}
     	if(con instanceof BoolCon){
     		requiredType = SymbolTable.find("bool"); 
     		structType = SymbolTable.boolType;
+    		val = ((BoolCon)con).getBol().equals("true") ? 1 : 0;
     	}
    		if(constTypeNode != requiredType){
     		report_error("Tip konstante " + multiConstDecl.getConstName() + " ne odgovara navedenom tipu! Na liniji: " + con.getLine(), null);
     	}else{
-    		SymbolTable.insert(Obj.Con, multiConstDecl.getConstName(), structType);
+    		Obj in = SymbolTable.insert(Obj.Con, multiConstDecl.getConstName(), structType);
+    		in.setAdr(val);
     	}
    	}
     
@@ -146,6 +159,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     	currentMethod = SymbolTable.insert(Obj.Meth, methodTypeName.getMethName(), methodType); // mora biti void funkcija
     	methodTypeName.obj = currentMethod;
     	SymbolTable.openScope();
+    	varDeclCount = 0; // resetujes pracenje rednog broja promenljive za main metodu
 		report_info("Obradjuje se funkcija " + methodTypeName.getMethName(), methodTypeName);
     }
     
@@ -166,18 +180,18 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     }
     
     public void visit(SingleDesignator designator){
-    	Obj obj = SymbolTable.find(designator.getName());
+    	Obj obj = SymbolTable.find(designator.getDesignatorName().getName());
     	if(obj == SymbolTable.noObj){
-			report_error("Greska na liniji " + designator.getLine()+ " : ime "+designator.getName()+" nije deklarisano! ", null);
+			report_error("Greska na liniji " + designator.getLine()+ " : ime "+designator.getDesignatorName().getName()+" nije deklarisano! ", null);
     	}
     	designator.obj = obj;
     }
     
 	public void visit(DesignatorIndex designator){
 		Obj exprObj = designator.getExpr().obj;
-   		Obj obj = SymbolTable.find(designator.getName());
+   		Obj obj = SymbolTable.find(designator.getDesignatorName().getName());
     	if(obj == SymbolTable.noObj){
-			report_error("Greska na liniji " + designator.getLine()+ " : ime "+designator.getName()+" nije deklarisano! ", null);
+			report_error("Greska na liniji " + designator.getLine()+ " : ime "+designator.getDesignatorName().getName()+" nije deklarisano! ", null);
     	}
     	if(obj.getType().getKind() != Struct.Array){
     		report_error("Ne moze se indeksirati promenljiva " + obj.getName() + " jer nije tipa niz!", designator);
@@ -191,7 +205,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     public void visit(AssignmentExpr assExpr){
     	Obj exprObj = assExpr.getExpr().obj;
     	if(assExpr.getDesignator() instanceof DesignatorIndex){
-    		Obj designator = SymbolTable.find(((DesignatorIndex)assExpr.getDesignator()).getName());
+    		Obj designator = SymbolTable.find(((DesignatorIndex)assExpr.getDesignator()).getDesignatorName().getName());
     		Struct leftOperandType = designator.getType().getElemType(); // uzima se tip promenljive elementa niza
 			// vec jeste promenljiva pa ne treba provera kao za ovo ispod
 	    	if(leftOperandType != exprObj.getType() && exprObj.getType() != SymbolTable.nullType){ // ako se nizu (referenci) dodeljuje null to je legalno
@@ -199,7 +213,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	    		return;
 	    	}
     	}else {
-	   		Obj designator = SymbolTable.find(((SingleDesignator)assExpr.getDesignator()).getName());
+	   		Obj designator = SymbolTable.find(((SingleDesignator)assExpr.getDesignator()).getDesignatorName().getName());
 	    	if(designator.getKind() != Obj.Var) {
 	    		report_error("Naziv na levoj strani dodele mora oznacavati promenljivu!", assExpr);
 	    		return;
@@ -357,17 +371,17 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     
     public void visit(ReadStmt rd){
     	if(rd.getDesignator() instanceof DesignatorIndex) return; // sve je vec u redu ako je element niza
-    	Obj obj = SymbolTable.find(((SingleDesignator)rd.getDesignator()).getName());
+    	Obj obj = SymbolTable.find(((SingleDesignator)rd.getDesignator()).getDesignatorName().getName());
     	if(obj.getType().getKind() == Struct.Array || obj.getKind() != Obj.Var) report_error("Argument funkcije read mora biti promenljiva ili element niza! ", rd);
     }
     
     public void visit(Increment inc){
 	    if(inc.getDesignator() instanceof DesignatorIndex){
-	    	Obj obj = SymbolTable.find(((DesignatorIndex)inc.getDesignator()).getName());
+	    	Obj obj = SymbolTable.find(((DesignatorIndex)inc.getDesignator()).getDesignatorName().getName());
 		    if(obj.getType().getElemType() != SymbolTable.intType) report_error("Operand operacije ++ mora biti tipa int! ", inc);
 	    }
 	    else{
-	    	Obj obj = SymbolTable.find(((SingleDesignator)inc.getDesignator()).getName());
+	    	Obj obj = SymbolTable.find(((SingleDesignator)inc.getDesignator()).getDesignatorName().getName());
 		    if(obj.getKind() != Obj.Var) report_error("Operand operacije ++ mora biti promenljiva ili element niza ", inc);
 		    if(obj.getType() != SymbolTable.intType) report_error("Operand operacije ++ mora biti tipa int! ", inc);
 	    }
@@ -375,11 +389,11 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     
     public void visit(Decrement dec){
     	if(dec.getDesignator() instanceof DesignatorIndex){
-	    	Obj obj = SymbolTable.find(((DesignatorIndex)dec.getDesignator()).getName());
+	    	Obj obj = SymbolTable.find(((DesignatorIndex)dec.getDesignator()).getDesignatorName().getName());
 		    if(obj.getType().getElemType() != SymbolTable.intType) report_error("Operand operacije -- mora biti tipa int! ", dec);
 	    }
 	    else{
-	    	Obj obj = SymbolTable.find(((SingleDesignator)dec.getDesignator()).getName());
+	    	Obj obj = SymbolTable.find(((SingleDesignator)dec.getDesignator()).getDesignatorName().getName());
 		    if(obj.getKind() != Obj.Var) report_error("Operand operacije -- mora biti promenljiva ili element niza ", dec);
 		    if(obj.getType() != SymbolTable.intType) report_error("Operand operacije -- mora biti tipa int! ", dec);
 	    }

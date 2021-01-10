@@ -1,11 +1,19 @@
 program MJProgram
 	int x; int y;
+	const int c = 6;
 {	
 	void main() 
 	int z;
-	int k;{
-		print(1);
+	int k;
+	char niz[];
+	{
+		niz = new char[5];
+		z = 5*c;
+		k = z*2;
+		print(1+c/(c-z)*z+2*c*(z-4)-k*c);
 		print('c');
 		print(true);
+		
+		// z = k + 1 + 2;
 	}
 }

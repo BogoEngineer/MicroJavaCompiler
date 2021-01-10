@@ -8,6 +8,7 @@ import rs.ac.bg.etf.pp1.SymbolTable;
 import rs.etf.pp1.symboltable.concepts.Obj;
 import rs.etf.pp1.symboltable.concepts.Struct;
 import org.apache.log4j.Logger;
+import java.util.*;
 
 
 public class CodeGenerator extends VisitorAdaptor {
@@ -17,13 +18,86 @@ public class CodeGenerator extends VisitorAdaptor {
 		return mainPc;
 	}
 	
+	private Obj programObj;
+	
+	LinkedList<String> postfixExpr = new LinkedList<String>(); // koriscen kao struktura koja cuva ceo postfix izraz nakon prepoznavanja Expr
+	Stack<String> operationStack = new Stack<String>(); // stek za operande (prioriteti)
+	// kodovi za operationStack
+	private final static String 
+		ADD = "+",
+		SUB = "-",
+		MUL = "*",
+		DIV = "/",
+		MOD = "%",
+		LPAREN = "(",
+		RPAREN = ")",
+		LBRACKET = "[",
+		RBRACKET = "]"
+	;
+	
 	Logger log = Logger.getLogger(getClass());
+	
+	private void postfixExprToExprStack() {
+		// stavlja postfixExpr na ExprStack pozivanjem Code funkcija
+		for(String postfixElem : postfixExpr) {
+			switch(postfixElem) { // Java compiler is using .equals
+			case ADD:
+				Code.put(Code.add);
+				break;
+			case SUB:
+				Code.put(Code.sub);
+				break;
+			case MUL:
+				Code.put(Code.mul);
+				break;
+			case DIV:
+				Code.put(Code.div);
+				break;
+			case MOD:
+				Code.put(Code.rem); // valjda je rem za moduo?
+				break;
+			case LPAREN: // dont do anything
+				break;
+			case RPAREN: // dont do anything
+				break;
+			default:
+				if(postfixElem.chars().allMatch( Character::isDigit )) { 
+					// this element in postfix expr is numerical constant
+					Obj con = SymbolTable.insert(Obj.Con, "$", SymbolTable.intType);
+					con.setLevel(0);
+					con.setAdr(Integer.parseInt(postfixElem)); // set value of constant
+					
+					Code.load(con);
+					break;
+				}
+				// this element in postfix expr is a variable 
+				Obj obj = SymbolTable.findInProgram(programObj, postfixElem);
+				Code.load(obj);
+				
+			}
+		}
+	}
+	
+	public void visit(ProgName progName) {
+		programObj = SymbolTable.find(progName.getProgName());
+	}
 	
 	public void visit(PrintStmt printStmt){
 		Obj exprObj = printStmt.getExpr().obj;
 		if(printStmt.getExpr().obj.getType() == SymbolTable.intType){
+			/* Code.loadConst(5);
+			Code.put(Code.print); */
+			while(!operationStack.isEmpty()) {
+				postfixExpr.add(operationStack.pop());
+			}
+			/* for(String postfixElem : postfixExpr) {
+				System.out.println(postfixElem + " ");
+			} */
+			postfixExprToExprStack();
 			Code.loadConst(5);
 			Code.put(Code.print);
+			postfixExpr.clear();
+			operationStack.clear();
 		}else if(printStmt.getExpr().obj.getType() == SymbolTable.charType){
 			Code.loadConst(1);
 			Code.put(Code.bprint);
@@ -52,11 +126,12 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(NumConst nc) {
-		Obj con = SymbolTable.insert(Obj.Con, "$", SymbolTable.intType);
+		postfixExpr.add(Integer.toString(nc.getNum()));
+		/* Obj con = SymbolTable.insert(Obj.Con, "$", SymbolTable.intType);
 		con.setLevel(0);
 		con.setAdr(nc.getNum());
 		
-		Code.load(con);
+		Code.load(con); */
 	}
 	
 	public void visit(CharConst nc) {
@@ -88,18 +163,151 @@ public class CodeGenerator extends VisitorAdaptor {
 	public void visit(DesignatorIndex designatorIndex) {
 		SyntaxNode parent = designatorIndex.getParent();
 		
-		if(Expr.class == parent.getClass()){
-			Code.load(SymbolTable.find(designatorIndex.getName()));
+		if(AssignmentExpr.class != parent.getClass()){ // ako je ovaj designator na levoj strani operacije ++ ili --
+			Code.load(SymbolTable.find(designatorIndex.getDesignatorName().getName()));
 		}
 	}
 	
 	public void visit(SingleDesignator singleDesignator) {
 		SyntaxNode parent = singleDesignator.getParent();
 		
-		if(Expr.class == parent.getClass()){
-			Code.load(SymbolTable.find(singleDesignator.getName()));
+		/* if(AssignmentExpr.class != parent.getClass()){ // ako je ovaj designator na levoj strani operacije ++ ili --
+			Code.load(SymbolTable.find(singleDesignator.getDesignatorName().getName()));
+		} */
+		
+		// dont add variable into postfix expr if its on the left side of a = operator
+		if(AssignmentExpr.class != parent.getClass()) postfixExpr.add(singleDesignator.getDesignatorName().getName()); 
+
+	}
+	
+	public void visit(Addop addop) {
+		if(operationStack.isEmpty()) operationStack.push(ADD);
+		else {
+			while(true) {
+				String top = operationStack.peek();
+				if(top.equals(LPAREN) || top.equals(RPAREN) || top.equals(LBRACKET) || top.equals(RBRACKET)) { // lower precedence
+					break;
+				}
+				postfixExpr.add(operationStack.pop());
+				if(operationStack.isEmpty()) break;
+			}
+			operationStack.push(ADD);
 		}
 	}
 	
+	public void visit(Subtractop subop) {
+		if(operationStack.isEmpty()) operationStack.push(SUB);
+		else {
+			while(true) {
+				String top = operationStack.peek();
+				if(top.equals(LPAREN) || top.equals(RPAREN) || top.equals(LBRACKET) || top.equals(RBRACKET)) { // lower precedence
+					break;
+				}
+				postfixExpr.add(operationStack.pop());
+				if(operationStack.isEmpty()) break;
+			}
+			operationStack.push(SUB);
+		}
+	}
 	
+	public void visit(Mulop mulop) {
+		if(operationStack.isEmpty()) operationStack.push(MUL);
+		else {
+			while(true) {
+				String top = operationStack.peek();
+				if(top.equals(LPAREN) || top.equals(RPAREN) || top.equals(LBRACKET) || top.equals(RBRACKET)
+						|| top.equals(ADD) || top.equals(SUB)) { // lower precedence
+					break;
+				}
+				postfixExpr.add(operationStack.pop());
+				if(operationStack.isEmpty()) break;
+			}
+			operationStack.push(MUL);
+		}
+	}
+	
+	public void visit(Divideop divop) {
+		if(operationStack.isEmpty()) operationStack.push(DIV);
+		else {
+			while(true) {
+				String top = operationStack.peek();
+				if(top.equals(LPAREN) || top.equals(RPAREN) || top.equals(LBRACKET) || top.equals(RBRACKET)
+						|| top.equals(ADD) || top.equals(SUB)) { // lower precedence
+					break;
+				}
+				postfixExpr.add(operationStack.pop());
+				if(operationStack.isEmpty()) break;
+			}
+			operationStack.push(DIV);
+		}
+	}
+	
+	public void visit(Modop modop) {
+		if(operationStack.isEmpty()) operationStack.push(MOD);
+		else {
+			while(true) {
+				String top = operationStack.peek();
+				if(top.equals(LPAREN) || top.equals(RPAREN) || top.equals(LBRACKET) || top.equals(RBRACKET)
+						|| top.equals(ADD) || top.equals(SUB)) { // lower precedence
+					break;
+				}
+				postfixExpr.add(operationStack.pop());
+				if(operationStack.isEmpty()) break;
+			}
+			operationStack.push(MOD);
+		}
+	}
+	
+	public void visit(Expr expr) {
+		SyntaxNode parentNode = expr.getParent();
+		if(DesignatorIndex.class == parentNode.getClass()) {
+			postfixExpr.add(RBRACKET);
+		}
+	}
+	
+	public void visit(DesignatorName designatorName) {
+		SyntaxNode parentNode = designatorName.getParent();
+		if(DesignatorIndex.class == parentNode.getClass()) {
+			postfixExpr.add(LBRACKET);
+		}
+	}
+	
+	public void visit(AssignmentExpr assExpr) {
+		while(!operationStack.isEmpty()) {
+			postfixExpr.add(operationStack.pop());
+		}
+		System.out.println("POSTFIX IZRAZ NAKON OPERACIJE DODELE VREDNOSTI: ");
+		for(String postfixElem : postfixExpr) {
+			System.out.println(postfixElem + " ");
+		}
+		/* do something */
+		postfixExprToExprStack();
+		Designator leftSideOperand = assExpr.getDesignator();
+		if(leftSideOperand instanceof SingleDesignator) {
+			Code.store(SymbolTable.findInProgram(programObj, ((SingleDesignator)leftSideOperand).getDesignatorName().getName()));
+		}else {
+			
+		}
+		
+		postfixExpr.clear();
+		operationStack.clear();
+	}
+	
+	public void visit(ParenExpr parenExpr) {
+		while(operationStack.peek() != LPAREN) {
+			postfixExpr.add(operationStack.pop());
+		}
+		operationStack.pop(); // pop left parenthesis
+	}
+	
+	public void visit(LeftParen leftParen) {
+		if(ParenExpr.class == leftParen.getParent().getClass()) { // mora biti al za svaki slucaj
+			operationStack.push(LPAREN);
+		}
+	}
+	
+	public void visit(NewFactorArray newFactorArray) { // generisanje koda za alokaciju memorije na heapu za niz
+		postfixExprToExprStack();
+		Code.put(Code.newarray);
+	}
 }
