@@ -8,11 +8,13 @@ program MJProgram
 	char niz[];
 	{
 		niz = new char[5];
+		niz[2] = 'b';
 		z = 5*c;
 		k = z*2;
-		print(1+c/(c-z)*z+2*c*(z-4)-k*c);
-		print('c');
-		print(true);
+		// print(1+c/(c-z)*z+2*c*(z-4));
+		print('a');
+		print(niz[2]);
+		// print(true);
 		
 		// z = k + 1 + 2;
 	}

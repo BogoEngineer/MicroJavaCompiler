@@ -21,7 +21,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	private Obj programObj;
 	
 	LinkedList<String> postfixExpr = new LinkedList<String>(); // koriscen kao struktura koja cuva ceo postfix izraz nakon prepoznavanja Expr
-	Stack<String> operationStack = new Stack<String>(); // stek za operande (prioriteti)
+	Stack<String> operationStack = new Stack<String>(); // stek za operatore (prioriteti)
 	// kodovi za operationStack
 	private final static String 
 		ADD = "+",
@@ -56,9 +56,10 @@ public class CodeGenerator extends VisitorAdaptor {
 			case MOD:
 				Code.put(Code.rem); // valjda je rem za moduo?
 				break;
-			case LPAREN: // dont do anything
+			case LBRACKET: // dont do anything
 				break;
-			case RPAREN: // dont do anything
+			case RBRACKET: // dont do anything
+				Code.put(Code.aload);
 				break;
 			default:
 				if(postfixElem.chars().allMatch( Character::isDigit )) { 
@@ -84,13 +85,12 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	public void visit(PrintStmt printStmt){
 		Obj exprObj = printStmt.getExpr().obj;
-		if(printStmt.getExpr().obj.getType() == SymbolTable.intType){
-			/* Code.loadConst(5);
-			Code.put(Code.print); */
+		if(exprObj.getType() == SymbolTable.intType){
 			while(!operationStack.isEmpty()) {
 				postfixExpr.add(operationStack.pop());
 			}
-			/* for(String postfixElem : postfixExpr) {
+			/* System.out.println("print arg: ");
+			for(String postfixElem : postfixExpr) {
 				System.out.println(postfixElem + " ");
 			} */
 			postfixExprToExprStack();
@@ -98,7 +98,12 @@ public class CodeGenerator extends VisitorAdaptor {
 			Code.put(Code.print);
 			postfixExpr.clear();
 			operationStack.clear();
-		}else if(printStmt.getExpr().obj.getType() == SymbolTable.charType){
+		}else if(exprObj.getType() == SymbolTable.charType){
+			System.out.println("print arg: ");
+			for(String postfixElem : postfixExpr) {
+				System.out.println(postfixElem + " ");
+			}
+			postfixExprToExprStack(); // u slucaju da char dolazi iz promenljive (koji potice iz expra - koji ide na stek)
 			Code.loadConst(1);
 			Code.put(Code.bprint);
 		}else {
@@ -138,7 +143,6 @@ public class CodeGenerator extends VisitorAdaptor {
 		Obj con = SymbolTable.insert(Obj.Con, "$", SymbolTable.intType);
 		con.setLevel(0);
 		con.setAdr(nc.getChr());
-		
 		Code.load(con);
 	}
 	
@@ -164,7 +168,24 @@ public class CodeGenerator extends VisitorAdaptor {
 		SyntaxNode parent = designatorIndex.getParent();
 		
 		if(AssignmentExpr.class != parent.getClass()){ // ako je ovaj designator na levoj strani operacije ++ ili --
-			Code.load(SymbolTable.find(designatorIndex.getDesignatorName().getName()));
+			//Code.load(SymbolTable.find(designatorIndex.getDesignatorName().getName())); // ne valja
+			if(parent.getClass() == Var.class) { // ako je ovaj designator na desnoj strani operacije dodele vrednosti
+				// pop till left bracket
+				while(operationStack.peek() != LBRACKET) {
+					postfixExpr.add(operationStack.pop());
+				}
+				operationStack.pop(); // pop left bracket
+				// ovo moze pripadati nekom vecem expr pa ne treba stavljati odmah sve na Expr Stack
+				postfixExpr.add(RBRACKET); 
+				// dodaje se da bi se znalo da se na RBRACKET u generisanom kodu smesti aload instrukcija kako bi se dohvatio element niza na poziciji
+				// koja je ukazana postfix expr-om izmedju LBRACKETa i RBRACKETa
+			}
+		}else {
+			Obj array = SymbolTable.findInProgram(programObj, designatorIndex.getDesignatorName().getName());
+			Code.load(array); // stavi na stek koja promenljiva
+			postfixExprToExprStack(); // stavi na stek u koji element niza treba da se ucita nesto
+			postfixExpr.clear();
+			operationStack.clear();
 		}
 	}
 	
@@ -259,15 +280,18 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(Expr expr) {
-		SyntaxNode parentNode = expr.getParent();
+		/* SyntaxNode parentNode = expr.getParent();
 		if(DesignatorIndex.class == parentNode.getClass()) {
 			postfixExpr.add(RBRACKET);
-		}
+		} */
 	}
 	
 	public void visit(DesignatorName designatorName) {
 		SyntaxNode parentNode = designatorName.getParent();
-		if(DesignatorIndex.class == parentNode.getClass()) {
+		if(DesignatorIndex.class == parentNode.getClass() && Var.class == parentNode.getParent().getClass()) {
+		// dodaje se [ na stek samo ako se koristi var[expr] na desnoj strani izraza za dodelu vrednosti
+			operationStack.push(LBRACKET);
+			postfixExpr.add(designatorName.getName());
 			postfixExpr.add(LBRACKET);
 		}
 	}
@@ -283,17 +307,18 @@ public class CodeGenerator extends VisitorAdaptor {
 		/* do something */
 		postfixExprToExprStack();
 		Designator leftSideOperand = assExpr.getDesignator();
-		if(leftSideOperand instanceof SingleDesignator) {
+		if(leftSideOperand instanceof SingleDesignator) { // obicna promenljiva
 			Code.store(SymbolTable.findInProgram(programObj, ((SingleDesignator)leftSideOperand).getDesignatorName().getName()));
-		}else {
-			
+		}else { // dodeljivanje elementu niza
+			postfixExprToExprStack(); // na stek ide desna strana izraza za dodelu
+			Code.put(Code.astore); // ucitavanje desne strane izraza u levu koja je ucitana u DesignatorIndexu
 		}
 		
 		postfixExpr.clear();
 		operationStack.clear();
 	}
 	
-	public void visit(ParenExpr parenExpr) {
+	public void visit(ParenExpr parenExpr) { // pop till right parenthesis
 		while(operationStack.peek() != LPAREN) {
 			postfixExpr.add(operationStack.pop());
 		}
