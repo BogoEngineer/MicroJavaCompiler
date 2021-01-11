@@ -18,6 +18,8 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	Obj currentCalledMethod = null;
 	int nVars;
 	
+	Type varType; // varType for current line
+	
 	Type constType = null;
 	
 	Logger log = Logger.getLogger(getClass());
@@ -39,12 +41,13 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		log.info(msg.toString());
 	}
 	
-	public void visit(VarWithType varDecl){
+	public void visit(SingleVar singleVar){
+		VarWithType varDecl = (VarWithType) singleVar.getVarDecl();
 		VarNoType varSignature = varDecl.getVarNoType();
-		String varType = varDecl.getType().getTypeName();
+		varType = varDecl.getType(); //.getTypeName();
 		if(varSignature instanceof VarIdentSingle){
 			report_info("Deklarisana promenljiva "+ ((VarIdentSingle)varSignature).getVarName(), varDecl);
-			if(SymbolTable.findInThisScope(((VarIdentSingle)varSignature).getVarName()) != SymbolTable.noObj) report_error("Promenljiva moze biti deklarisana samo jednom!", varDecl);
+			if(SymbolTable.findInThisScope(((VarIdentSingle)varSignature).getVarName()) != SymbolTable.noObj) report_error("Promenljiva moze biti deklarisana samo jednom!", singleVar);
 			else {
 				Obj varNode = SymbolTable.insert(Obj.Var, ((VarIdentSingle)varSignature).getVarName(), varDecl.getType().obj.getType());
 				varNode.setAdr(varDeclCount++);
@@ -52,11 +55,33 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 		}
 		if(varSignature instanceof VarIdentArray){
 			Struct type = SymbolTable.nullType;
-			if(varType.equals("int")) type = SymbolTable.intArrayType;
-			if(varType.equals("char")) type = SymbolTable.charArrayType;
-			if(varType.equals("bool")) type = SymbolTable.boolArrayType;
+			if(varType.getTypeName().equals("int")) type = SymbolTable.intArrayType;
+			if(varType.getTypeName().equals("char")) type = SymbolTable.charArrayType;
+			if(varType.getTypeName().equals("bool")) type = SymbolTable.boolArrayType;
 			report_info("Deklarisana (niz) promenljiva "+ ((VarIdentArray)varSignature).getVarName(), varDecl);
-			if(SymbolTable.findInThisScope(((VarIdentArray)varSignature).getVarName()) != SymbolTable.noObj) report_error("Promenljiva moze biti deklarisana samo jednom!", varDecl);
+			if(SymbolTable.findInThisScope(((VarIdentArray)varSignature).getVarName()) != SymbolTable.noObj) report_error("Promenljiva moze biti deklarisana samo jednom!", singleVar);
+			Obj varNode = SymbolTable.insert(Obj.Var, ((VarIdentArray)varSignature).getVarName(), type);
+			varNode.setAdr(varDeclCount++);
+		}
+	} 
+	
+	public void visit(MultiVarDecl multiVarDecl) {
+		VarNoType varSignature = multiVarDecl.getVarNoType();
+		if(varSignature instanceof VarIdentSingle){
+			report_info("Deklarisana promenljiva "+ ((VarIdentSingle)varSignature).getVarName(), multiVarDecl);
+			if(SymbolTable.findInThisScope(((VarIdentSingle)varSignature).getVarName()) != SymbolTable.noObj) report_error("Promenljiva moze biti deklarisana samo jednom!", multiVarDecl);
+			else {
+				Obj varNode = SymbolTable.insert(Obj.Var, ((VarIdentSingle)varSignature).getVarName(), varType.obj.getType());
+				varNode.setAdr(varDeclCount++);
+			}
+		}
+		if(varSignature instanceof VarIdentArray){
+			Struct type = SymbolTable.nullType;
+			if(varType.getTypeName().equals("int")) type = SymbolTable.intArrayType;
+			if(varType.getTypeName().equals("char")) type = SymbolTable.charArrayType;
+			if(varType.getTypeName().equals("bool")) type = SymbolTable.boolArrayType;
+			report_info("Deklarisana (niz) promenljiva "+ ((VarIdentArray)varSignature).getVarName(), multiVarDecl);
+			if(SymbolTable.findInThisScope(((VarIdentArray)varSignature).getVarName()) != SymbolTable.noObj) report_error("Promenljiva moze biti deklarisana samo jednom!", multiVarDecl);
 			Obj varNode = SymbolTable.insert(Obj.Var, ((VarIdentArray)varSignature).getVarName(), type);
 			varNode.setAdr(varDeclCount++);
 		}

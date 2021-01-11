@@ -39,6 +39,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	private void postfixExprToExprStack() {
 		// stavlja postfixExpr na ExprStack pozivanjem Code funkcija
+		if(postfixExpr.isEmpty()) return;
 		for(String postfixElem : postfixExpr) {
 			switch(postfixElem) { // Java compiler is using .equals
 			case ADD:
@@ -67,16 +68,17 @@ public class CodeGenerator extends VisitorAdaptor {
 					Obj con = SymbolTable.insert(Obj.Con, "$", SymbolTable.intType);
 					con.setLevel(0);
 					con.setAdr(Integer.parseInt(postfixElem)); // set value of constant
-					
 					Code.load(con);
 					break;
 				}
 				// this element in postfix expr is a variable 
 				Obj obj = SymbolTable.findInProgram(programObj, postfixElem);
 				Code.load(obj);
-				
 			}
 		}
+		// kad si premestio na Expr Stack, ocisti ove strukture
+		postfixExpr.clear();
+		operationStack.clear();
 	}
 	
 	public void visit(ProgName progName) {
@@ -96,8 +98,6 @@ public class CodeGenerator extends VisitorAdaptor {
 			postfixExprToExprStack();
 			Code.loadConst(5);
 			Code.put(Code.print);
-			postfixExpr.clear();
-			operationStack.clear();
 		}else if(exprObj.getType() == SymbolTable.charType){
 			System.out.println("print arg: ");
 			for(String postfixElem : postfixExpr) {
@@ -184,8 +184,6 @@ public class CodeGenerator extends VisitorAdaptor {
 			Obj array = SymbolTable.findInProgram(programObj, designatorIndex.getDesignatorName().getName());
 			Code.load(array); // stavi na stek koja promenljiva
 			postfixExprToExprStack(); // stavi na stek u koji element niza treba da se ucita nesto
-			postfixExpr.clear();
-			operationStack.clear();
 		}
 	}
 	
@@ -305,17 +303,14 @@ public class CodeGenerator extends VisitorAdaptor {
 			System.out.println(postfixElem + " ");
 		}
 		/* do something */
-		postfixExprToExprStack();
+		postfixExprToExprStack(); // na stek ide desna strana izraza jednakosti, ako je bio izraz new int[2] onda na steku nece biti nista pa se ne desava nista
 		Designator leftSideOperand = assExpr.getDesignator();
-		if(leftSideOperand instanceof SingleDesignator) { // obicna promenljiva
+		if(leftSideOperand instanceof SingleDesignator) { // obicna promenljivaq
 			Code.store(SymbolTable.findInProgram(programObj, ((SingleDesignator)leftSideOperand).getDesignatorName().getName()));
 		}else { // dodeljivanje elementu niza
-			postfixExprToExprStack(); // na stek ide desna strana izraza za dodelu
+			// postfixExprToExprStack(); // na stek ide desna strana izraza za dodelu
 			Code.put(Code.astore); // ucitavanje desne strane izraza u levu koja je ucitana u DesignatorIndexu
 		}
-		
-		postfixExpr.clear();
-		operationStack.clear();
 	}
 	
 	public void visit(ParenExpr parenExpr) { // pop till right parenthesis
@@ -334,5 +329,10 @@ public class CodeGenerator extends VisitorAdaptor {
 	public void visit(NewFactorArray newFactorArray) { // generisanje koda za alokaciju memorije na heapu za niz
 		postfixExprToExprStack();
 		Code.put(Code.newarray);
+		if (newFactorArray.getType().obj.getType() == SymbolTable.charType) {
+			Code.put(0);
+		} else {
+			Code.put(1);
+		}
 	}
 }

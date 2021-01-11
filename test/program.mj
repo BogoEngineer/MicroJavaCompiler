@@ -5,15 +5,19 @@ program MJProgram
 	void main() 
 	int z;
 	int k;
-	char niz[];
+	int p;
+	int s, t;
+	int niz[];
 	{
-		niz = new char[5];
-		niz[2] = 'b';
-		z = 5*c;
+		niz = new int[5];
+		niz[2] = 3;
+		niz[1] = 2;
+		z = 5*c/niz[niz[1]];
 		k = z*2;
-		// print(1+c/(c-z)*z+2*c*(z-4));
-		print('a');
-		print(niz[2]);
+		print(z);
+		print(1+c/(z-c)*z+2*c*(z-4));
+		// print('a');
+		// print(niz[2]);
 		// print(true);
 		
 		// z = k + 1 + 2;
