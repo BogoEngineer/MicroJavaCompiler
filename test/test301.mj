@@ -43,13 +43,14 @@ program test301
 		bodovi = bodovi + (pet * jedan - 1) * (bodovi - 3 % 2 + 3 * 2) - 3; // 47
 		print(bodovi);
 	
-		read(bodovi);
+		read(niz[1]);
 		print(1111111);
 		bt = true;
 		print(bt ? bodovi+20*1 : bodovi + 10);
 		print(false ? bodovi + 20 : bodovi + 30);
 		print(true ? 'c' : '-');
 		
+		print(niz[1]+10*10, 10);
 		// bodovi[5]; ne prijavljuje gresku ali se ne parsira
 		// niz['c'] = 5;
 		// niz = new char[3];

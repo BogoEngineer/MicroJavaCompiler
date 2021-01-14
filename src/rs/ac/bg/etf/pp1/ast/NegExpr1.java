@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 14/0/2021 11:50:30
+// 14/0/2021 16:52:18
 
 
 package rs.ac.bg.etf.pp1.ast;

@@ -110,6 +110,7 @@ nonterminal DesignatorName DesignatorName;
 nonterminal LeftParen LeftParen;
 nonterminal Qmark Qmark;
 nonterminal Colon Colon;
+nonterminal PrintExtension PrintExtension;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
 
@@ -231,12 +232,17 @@ Statement ::= (Assignment) DesignatorStatement:dest SEMI {: RESULT=new Assignmen
 			 error SEMI:l
 		   	 {: parser.report_error("Izvrsen oporavak do ; u liniji " + lleft, null);  :} {: RESULT=new StatementDerived1(); :} /* iskaz dodele */
 		   	  |
-			(PrintStmt) PRINT LPAREN Expr:E1 RPAREN SEMI {: RESULT=new PrintStmt(E1); RESULT.setLine(E1left); :} 
+			(PrintStmt) PRINT LPAREN Expr:E1 PrintExtension:P2 RPAREN SEMI {: RESULT=new PrintStmt(E1, P2); RESULT.setLine(E1left); :} 
 			  |
 			(DoWhileStmt) DO StatementBlock:S1 WHILE LPAREN Condition:C2 RPAREN SEMI {: RESULT=new DoWhileStmt(S1, C2); RESULT.setLine(S1left); :}
 			  |
 			(ReadStmt) READ LPAREN Designator:D1 RPAREN SEMI {: RESULT=new ReadStmt(D1); RESULT.setLine(D1left); :}
 			  ;
+
+PrintExtension ::= (PExtension) COMMA NUMBER:N1 {: RESULT=new PExtension(N1); RESULT.setLine(N1left); :}
+					|
+				   (NoPExtension) {: RESULT=new NoPExtension(); :} /* epsilon */
+				   	;	
 
 SwitchCaseList ::=  (MultiCase) SwitchCaseList:S1 CASE NUMBER:N2 COLON StatementList:S3 {: RESULT=new MultiCase(S1, N2, S3); RESULT.setLine(S1left); :}
 						| 

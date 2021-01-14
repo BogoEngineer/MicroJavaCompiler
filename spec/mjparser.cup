@@ -79,7 +79,7 @@ nonterminal DeclarationList, ClassDecl, VarDeclSemi, ConstDecl, Constant, Extend
 nonterminal SwitchCaseList, Condition, Assignop, VarNoType;
 nonterminal CondTerm, CondFact, Mulop, Relop, VarDeclarationBlock, StatementBlock, BraceMethodDeclBlock;
 
-nonterminal DesignatorName, LeftParen, Qmark, Colon;
+nonterminal DesignatorName, LeftParen, Qmark, Colon, PrintExtension;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
 
@@ -201,12 +201,17 @@ Statement ::= (Assignment) DesignatorStatement:dest SEMI
 			 error SEMI:l
 		   	 {: parser.report_error("Izvrsen oporavak do ; u liniji " + lleft, null);  :} /* iskaz dodele */
 		   	  |
-			(PrintStmt) PRINT LPAREN Expr RPAREN SEMI 
+			(PrintStmt) PRINT LPAREN Expr PrintExtension RPAREN SEMI 
 			  |
 			(DoWhileStmt) DO StatementBlock WHILE LPAREN Condition RPAREN SEMI
 			  |
 			(ReadStmt) READ LPAREN Designator RPAREN SEMI
 			  ;
+
+PrintExtension ::= (PExtension) COMMA NUMBER
+					|
+				   (NoPExtension) /* epsilon */
+				   	;	
 
 SwitchCaseList ::=  (MultiCase) SwitchCaseList CASE NUMBER COLON StatementList
 						| 

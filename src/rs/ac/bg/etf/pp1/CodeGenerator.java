@@ -26,6 +26,8 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	int byteCodeFix = 0; // poslednja/e linije u bytecode koje treba ispraviti
 	
+	int printLen = -1; // ako je -1 znaci da treba default
+	
 	private final static String 
 		ADD = "+",
 		SUB = "-",
@@ -114,7 +116,7 @@ public class CodeGenerator extends VisitorAdaptor {
 				System.out.println(postfixElem + " ");
 			} */
 			postfixExprToExprStack();
-			Code.loadConst(5);
+			Code.loadConst(printLen == -1 ? 5 : printLen);
 			Code.put(Code.print);
 		}else if(exprObj.getType() == SymbolTable.charType){
 			/* System.out.println("print arg: ");
@@ -122,12 +124,17 @@ public class CodeGenerator extends VisitorAdaptor {
 				System.out.println(postfixElem + " ");
 			} */
 			postfixExprToExprStack(); // u slucaju da char dolazi iz promenljive (koji potice iz expra - koji ide na stek)
-			Code.loadConst(1);
+			Code.loadConst(printLen == -1 ? 1 : printLen);
 			Code.put(Code.bprint);
 		}else {
-			Code.loadConst(1);
+			Code.loadConst(printLen == -1 ? 1 : printLen);
 			Code.put(Code.print);
 		}
+		printLen = -1;
+	}
+	
+	public void visit(PExtension pextension) {
+		printLen = pextension.getN1();
 	}
 	
 	public void visit(MethodTypeName methodTypeName){
@@ -184,7 +191,7 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	public void visit(DesignatorIndex designatorIndex) {
 		SyntaxNode parent = designatorIndex.getParent();
-		
+		if(ReadStmt.class == parent.getClass()) return;
 		if(AssignmentExpr.class != parent.getClass()){ // ako je ovaj designator na levoj strani operacije ++ ili --
 			//Code.load(SymbolTable.find(designatorIndex.getDesignatorName().getName())); // ne valja
 			if(parent.getClass() == Var.class) { // ako je ovaj designator na desnoj strani operacije dodele vrednosti
@@ -213,7 +220,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		} */
 		
 		// dont add variable into postfix expr if its on the left side of a = operator
-		if(AssignmentExpr.class != parent.getClass()) postfixExpr.add(singleDesignator.getDesignatorName().getName()); 
+		if(AssignmentExpr.class != parent.getClass() && ReadStmt.class != parent.getClass()) postfixExpr.add(singleDesignator.getDesignatorName().getName()); 
 
 	}
 	
@@ -419,13 +426,16 @@ public class CodeGenerator extends VisitorAdaptor {
 		Designator des = readStmt.getDesignator();
 		if(des instanceof SingleDesignator) {
 			Obj obj = SymbolTable.findInProgram(programObj, ((SingleDesignator)des).getDesignatorName().getName());
-			Code.put(Code.read);
+			if(obj.getType() != SymbolTable.intType) Code.put(Code.bread);
+			else Code.put(Code.read);
 			Code.store(obj);
+			
 		}else {
 			Obj obj = SymbolTable.findInProgram(programObj, ((DesignatorIndex)des).getDesignatorName().getName());
 			Code.load(obj);
 			postfixExprToExprStack();
-			Code.put(Code.read);
+			if(obj.getType().getElemType() != SymbolTable.intType) Code.put(Code.bread);
+			else Code.put(Code.read);
 			Code.put(Code.astore);
 		}
 	}

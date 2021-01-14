@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 14/0/2021 11:50:30
+// 14/0/2021 16:52:18
 
 
 package rs.ac.bg.etf.pp1.ast;
@@ -8,10 +8,13 @@ package rs.ac.bg.etf.pp1.ast;
 public class PrintStmt extends Statement {
 
     private Expr Expr;
+    private PrintExtension PrintExtension;
 
-    public PrintStmt (Expr Expr) {
+    public PrintStmt (Expr Expr, PrintExtension PrintExtension) {
         this.Expr=Expr;
         if(Expr!=null) Expr.setParent(this);
+        this.PrintExtension=PrintExtension;
+        if(PrintExtension!=null) PrintExtension.setParent(this);
     }
 
     public Expr getExpr() {
@@ -22,21 +25,32 @@ public class PrintStmt extends Statement {
         this.Expr=Expr;
     }
 
+    public PrintExtension getPrintExtension() {
+        return PrintExtension;
+    }
+
+    public void setPrintExtension(PrintExtension PrintExtension) {
+        this.PrintExtension=PrintExtension;
+    }
+
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
 
     public void childrenAccept(Visitor visitor) {
         if(Expr!=null) Expr.accept(visitor);
+        if(PrintExtension!=null) PrintExtension.accept(visitor);
     }
 
     public void traverseTopDown(Visitor visitor) {
         accept(visitor);
         if(Expr!=null) Expr.traverseTopDown(visitor);
+        if(PrintExtension!=null) PrintExtension.traverseTopDown(visitor);
     }
 
     public void traverseBottomUp(Visitor visitor) {
         if(Expr!=null) Expr.traverseBottomUp(visitor);
+        if(PrintExtension!=null) PrintExtension.traverseBottomUp(visitor);
         accept(visitor);
     }
 
@@ -47,6 +61,12 @@ public class PrintStmt extends Statement {
 
         if(Expr!=null)
             buffer.append(Expr.toString("  "+tab));
+        else
+            buffer.append(tab+"  null");
+        buffer.append("\n");
+
+        if(PrintExtension!=null)
+            buffer.append(PrintExtension.toString("  "+tab));
         else
             buffer.append(tab+"  null");
         buffer.append("\n");
