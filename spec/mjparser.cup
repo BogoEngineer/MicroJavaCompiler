@@ -79,7 +79,7 @@ nonterminal DeclarationList, ClassDecl, VarDeclSemi, ConstDecl, Constant, Extend
 nonterminal SwitchCaseList, Condition, Assignop, VarNoType;
 nonterminal CondTerm, CondFact, Mulop, Relop, VarDeclarationBlock, StatementBlock, BraceMethodDeclBlock;
 
-nonterminal DesignatorName, LeftParen;
+nonterminal DesignatorName, LeftParen, Qmark, Colon;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
 
@@ -250,8 +250,13 @@ CondFact ::= (ExprCondFact) Expr
 
 Expr ::= (NormalExpr) Expr1
 			|
-		 (TernaryExpr) Expr1 QMARK Expr1:first COLON Expr1:second /* revizirano */
+		 (TernaryExpr) Expr1 Qmark Expr1:first Colon Expr1:second /* revizirano */
 		 	;
+
+Qmark ::= (Qmark) QMARK;
+
+Colon ::= (Colon) COLON;
+
 
 Expr1 ::= (PosExpr1) UnsignedExpr
 			|

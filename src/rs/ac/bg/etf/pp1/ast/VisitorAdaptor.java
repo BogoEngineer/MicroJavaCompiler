@@ -1,6 +1,6 @@
 // generated with ast extension for cup
 // version 0.8
-// 11/0/2021 11:12:24
+// 14/0/2021 11:50:30
 
 
 package rs.ac.bg.etf.pp1.ast;
@@ -76,6 +76,8 @@ public abstract class VisitorAdaptor implements Visitor {
     public void visit(AddExpr AddExpr) { visit(); }
     public void visit(NegExpr1 NegExpr1) { visit(); }
     public void visit(PosExpr1 PosExpr1) { visit(); }
+    public void visit(Colon Colon) { visit(); }
+    public void visit(Qmark Qmark) { visit(); }
     public void visit(TernaryExpr TernaryExpr) { visit(); }
     public void visit(NormalExpr NormalExpr) { visit(); }
     public void visit(ERECondFact ERECondFact) { visit(); }

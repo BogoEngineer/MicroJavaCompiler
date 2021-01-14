@@ -48,10 +48,6 @@ public class Compiler {
 			prog.traverseBottomUp(v); 
 			//RuleVisitor v = new RuleVisitor();
 	      
-			log.info(" Print count calls = " + v.printCallCount);
-
-			log.info(" Deklarisanih promenljivih ima = " + v.varDeclCount);
-			System.out.println("AJ OPET: " + SymbolTable.find("xddd").getAdr());
 			SymbolTable.dump();
 			if(!p.errorDetected && v.passed()){
 				File objFile = new File("test/program.obj");

@@ -17,7 +17,7 @@ program test301
 		// xd a;
 	{
 		bodovi = 0;
-		// bodovi++;
+		bodovi++;
 		bodovi = bodovi + jedan;
 		bodovi = bodovi * pet;
 		// bodovi--;
@@ -27,6 +27,8 @@ program test301
 		niz[nula] = jedan;                 // niz[0] = 1
 		niz[1] = 2;                        // niz[1] = 2
 		niz[niz[jedan]] = niz[niz[0]] * 3; // niz[2] = 6
+		niz[niz[jedan]]++;
+		//niz[niz[jedan]]--;
 		bodovi = niz[2]/niz[0];
 		print(bodovi); 
 		print(niz[2]);
@@ -42,10 +44,11 @@ program test301
 		print(bodovi);
 	
 		read(bodovi);
+		print(1111111);
 		bt = true;
-		// print(bt ? bodovi : bodovi + 10);
-		// print(false ? bodovi + 20 : bodovi + 30);
-		// print(true ? 'c' : '-');
+		print(bt ? bodovi+20*1 : bodovi + 10);
+		print(false ? bodovi + 20 : bodovi + 30);
+		print(true ? 'c' : '-');
 		
 		// bodovi[5]; ne prijavljuje gresku ali se ne parsira
 		// niz['c'] = 5;

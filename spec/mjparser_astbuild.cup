@@ -108,6 +108,8 @@ nonterminal BraceMethodDeclBlock BraceMethodDeclBlock;
 
 nonterminal DesignatorName DesignatorName;
 nonterminal LeftParen LeftParen;
+nonterminal Qmark Qmark;
+nonterminal Colon Colon;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
 
@@ -278,8 +280,13 @@ CondFact ::= (ExprCondFact) Expr:E1 {: RESULT=new ExprCondFact(E1); RESULT.setLi
 
 Expr ::= (NormalExpr) Expr1:E1 {: RESULT=new NormalExpr(E1); RESULT.setLine(E1left); :}
 			|
-		 (TernaryExpr) Expr1:E1 QMARK Expr1:first COLON Expr1:second {: RESULT=new TernaryExpr(E1, first, second); RESULT.setLine(E1left); :} /* revizirano */
+		 (TernaryExpr) Expr1:E1 Qmark:Q2 Expr1:first Colon:C3 Expr1:second {: RESULT=new TernaryExpr(E1, Q2, first, C3, second); RESULT.setLine(E1left); :} /* revizirano */
 		 	;
+
+Qmark ::= (Qmark) QMARK {: RESULT=new Qmark(); :};
+
+Colon ::= (Colon) COLON {: RESULT=new Colon(); :};
+
 
 Expr1 ::= (PosExpr1) UnsignedExpr:U1 {: RESULT=new PosExpr1(U1); RESULT.setLine(U1left); :}
 			|
