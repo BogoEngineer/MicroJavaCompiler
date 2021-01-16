@@ -92,8 +92,13 @@ public class CodeGenerator extends VisitorAdaptor {
 					break;
 				}
 				// this element in postfix expr is a variable 
-				Obj obj = SymbolTable.findInProgram(programObj, postfixElem);
-				Code.load(obj);
+				if(!postfixElem.equals("eol")) {
+					Obj obj = SymbolTable.findInProgram(programObj, postfixElem);
+					Code.load(obj);
+				}else {
+					Code.loadConst('\n');
+				}
+				
 			}
 		}
 		// kad si premestio na Expr Stack, ocisti ove strukture

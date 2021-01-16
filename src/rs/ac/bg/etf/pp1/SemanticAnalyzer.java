@@ -233,7 +233,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
     		Obj designator = SymbolTable.find(((DesignatorIndex)assExpr.getDesignator()).getDesignatorName().getName());
     		Struct leftOperandType = designator.getType().getElemType(); // uzima se tip promenljive elementa niza
 			// vec jeste promenljiva pa ne treba provera kao za ovo ispod
-	    	if(leftOperandType != exprObj.getType() && exprObj.getType() != SymbolTable.nullType){ // ako se nizu (referenci) dodeljuje null to je legalno
+	    	if(leftOperandType != exprObj.getType()){ // ako se nizu (referenci) dodeljuje null to je legalno
 	    		report_error("Operandi operacije dodele vrednosti moraju biti istog tipa! ", assExpr);
 	    		return;
 	    	}
@@ -243,7 +243,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 	    		report_error("Naziv na levoj strani dodele mora oznacavati promenljivu!", assExpr);
 	    		return;
 	    	}
-	    	if(designator.getType() != exprObj.getType()){
+	    	if(designator.getType() != exprObj.getType() && exprObj.getType() != SymbolTable.nullType){
 	    		report_error("Operandi operacije dodele vrednosti moraju biti istog tipa!", assExpr);
 	    		return;
 	    	}
