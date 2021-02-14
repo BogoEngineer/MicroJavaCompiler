@@ -15,3 +15,8 @@ Supported:
 ## Usage
 
 Use ant build with build.xml or run manually src/rs/ac/bg/etf/pp1/Compiler.java <YourMicroJavaProgram.mj> <WantedObjFile.obj> to get .obj file that is runnable on MJVM (MicroJava virtual machine).
+
+
+## Tools used
+- JFlex (lexical analyzer generator) : https://jflex.de/
+- CUP (LALR(1) parsing engine) : http://www2.cs.tum.edu/projects/cup/
