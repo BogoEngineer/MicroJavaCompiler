@@ -10,7 +10,7 @@ Supported:
 - global variables
 - local variables (for main method)
 - print and read methods
-- operations +, -, *, /, %, ++, --
+- operations +, -, *, /, %, ++, --, =
 
 ## Usage
 
