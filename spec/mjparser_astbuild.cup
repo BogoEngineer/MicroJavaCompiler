@@ -112,7 +112,7 @@ nonterminal Qmark Qmark;
 nonterminal Colon Colon;
 nonterminal PrintExtension PrintExtension;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1, Negate;
 
 Program ::= (Program) PROG ProgName:p DeclarationList:D1 LBRACE MethodDeclBlock:M2 RBRACE {: RESULT=new Program(p, D1, M2); RESULT.setLine(pleft); :};
 
@@ -296,13 +296,17 @@ Colon ::= (Colon) COLON {: RESULT=new Colon(); :};
 
 Expr1 ::= (PosExpr1) UnsignedExpr:U1 {: RESULT=new PosExpr1(U1); RESULT.setLine(U1left); :}
 			|
-		  (NegExpr1) MINUS UnsignedExpr:U1 {: RESULT=new NegExpr1(U1); RESULT.setLine(U1left); :}
+		  (NegExpr1) Negate:N1 UnsignedExpr:U2 {: RESULT=new NegExpr1(N1, U2); RESULT.setLine(N1left); :}
 		  	;
+		  	
+Negate ::= (Neg) MINUS {: RESULT=new Neg(); :};
 		 	
 UnsignedExpr ::= (AddExpr) UnsignedExpr:U1 Addop:A2 Term:T3 {: RESULT=new AddExpr(U1, A2, T3); RESULT.setLine(U1left); :}
 		  			|		  		 	
 		 		 (TermExpr) Term:T1 {: RESULT=new TermExpr(T1); RESULT.setLine(T1left); :}
 		 			;
+		 			
+
 
 Term ::= (FactorMulopTerm) Term:T1 Mulop:M2 Factor:F3 {: RESULT=new FactorMulopTerm(T1, M2, F3); RESULT.setLine(T1left); :} 
 			|

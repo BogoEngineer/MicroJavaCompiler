@@ -1,0 +1,47 @@
+program tester
+
+	const int nula = 0;
+	const int jedan = 1;
+	const int pet = 5;
+
+	int niz[];
+	char nizch[];
+	
+{
+	void main()	
+		int bodovi;
+		bool bt;
+	{
+		niz = new int[5];
+		
+		niz[false ? 0 : 1] = pet;
+		
+		niz[nula ? 0 : 1] = jedan;
+		
+		niz[true ? (8-8)*3 : (4+5)%8]++;
+		niz[niz[true ? 1 : 0] + 2-7*1%6] = 77;
+		
+		niz[4] = niz[true ? 2 : 0];
+		print(niz[4]);
+		print(eol);
+		niz[4] = niz[niz[true ? 1 : 0] + 3] + 1; 
+		// read(niz[niz[0] ? 0 : 1]);
+		read(niz[niz[true ? 0 : 1] + 1]); 
+		
+		print(niz[true ? 2 : 0]);
+		print(true ? niz[2] : niz[0]);
+		print(eol);
+		
+		print(niz[0]);
+		print(niz[1]); 	
+		print(niz[2]);
+		print(niz[3]);
+		print(niz[4]);
+		print(eol);
+		
+		print(niz[4] ? 'a' : 'b');
+		print(eol);
+
+	}
+	//fresh
+}

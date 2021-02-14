@@ -81,7 +81,7 @@ nonterminal CondTerm, CondFact, Mulop, Relop, VarDeclarationBlock, StatementBloc
 
 nonterminal DesignatorName, LeftParen, Qmark, Colon, PrintExtension;
 nonterminal rs.etf.pp1.symboltable.concepts.Obj ProgName, Program, MethodDecl, MethodTypeName;
-nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1;
+nonterminal rs.etf.pp1.symboltable.concepts.Obj Type, Term, Factor, Expr, Designator, NewFactor, UnsignedExpr, Expr1, Negate;
 
 Program ::= (Program) PROG ProgName:p DeclarationList LBRACE MethodDeclBlock RBRACE;
 
@@ -265,13 +265,17 @@ Colon ::= (Colon) COLON;
 
 Expr1 ::= (PosExpr1) UnsignedExpr
 			|
-		  (NegExpr1) MINUS UnsignedExpr
+		  (NegExpr1) Negate UnsignedExpr
 		  	;
+		  	
+Negate ::= (Neg) MINUS;
 		 	
 UnsignedExpr ::= (AddExpr) UnsignedExpr Addop Term
 		  			|		  		 	
 		 		 (TermExpr) Term
 		 			;
+		 			
+
 
 Term ::= (FactorMulopTerm) Term Mulop Factor 
 			|

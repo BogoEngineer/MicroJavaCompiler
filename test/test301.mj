@@ -2,36 +2,34 @@
 
 program test301
 
-	const int nula = 0, dva = 2;
+	const int nula = 0;
 	const int jedan = 1;
 	const int pet = 5;
-	// const bool greska = 5;
 
 	int niz[];
 	char nizch[];
-
+	
 {
 	void main()	
 		int bodovi;
 		bool bt;
-		// xd a;
 	{
 		bodovi = 0;
 		bodovi++;
 		bodovi = bodovi + jedan;
 		bodovi = bodovi * pet;
-		// bodovi--;
+		bodovi--;
 		print(bodovi); 
+			
 		
-		niz = null;
-		niz[nula] = jedan;                 // niz[0] = 1
-		niz[1] = 2;                        // niz[1] = 2
-		niz[niz[jedan]] = niz[niz[0]] * 3; // niz[2] = 6
-		niz[niz[jedan]]++;
-		//niz[niz[jedan]]--;
+		niz = new int[3];
+		niz[nula] = jedan;
+		niz[1] = 2;
+		niz[niz[jedan]] = niz[niz[0]] * 3;
 		bodovi = niz[2]/niz[0];
 		print(bodovi); 
 		print(niz[2]);
+		
 		
 		nizch = new char[3];
 		nizch[0] = 'a';
@@ -40,30 +38,16 @@ program test301
 		print(nizch[1]);
 		print(nizch[jedan * 2]);
 			
-		bodovi = bodovi + (pet * jedan - 1) * (bodovi - 3 % 2 + 3 * 2) - 3; // 47
-		print(bodovi);
-	
-		// read(niz[1]);
-		print(1111111);
-		bt = true;
-		print(bt ? bodovi+20*1 : bodovi + 10);
-		print(false ? bodovi + 20 : bodovi + 30);
-		print(true ? 'c' : '-');
 		
-		print(eol);
-		print(niz[1]+10*10, 10);
-		// bodovi[5]; ne prijavljuje gresku ali se ne parsira
-		// niz['c'] = 5;
-		// niz = new char[3];
-		// bodovi = 'c' * 5;
-		// bt = true ? 5 : 'x';
-		// bodovi = bodovi + 'c';
-		// bodovi = -false;
-		// print(nizch);
-		// read(niz);
-		// nizch++;
-		// niz = null; nije prepoznato null uopste, ostalo radi
-		// bodovi = new int[5];
+		bodovi = bodovi + (pet * jedan - 1) * bodovi - (3 % 2 + 3 * 2 - 3); 
+		print(bodovi);
+			
+		read(bodovi);
+		bt = true;
+		
+		print(bt ? bodovi : bodovi + 10);
+		print(false ? bodovi + 20 : bodovi + 30);
+		print(bodovi - 10 ? '+' : '-');
 	}
 }
 

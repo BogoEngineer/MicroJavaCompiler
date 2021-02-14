@@ -24,9 +24,20 @@ public class Compiler {
 		
 		Logger log = Logger.getLogger(Compiler.class);
 		
+		if (args.length < 2) {
+			log.error("Nije uneto dovoljno argumenata! Usage: MJParser <source-file> <obj-file> ");
+			return;
+		}
+		
+		File sourceCode = new File(args[0]);
+		if (!sourceCode.exists()) {
+			log.error("Source file [" + sourceCode.getAbsolutePath() + "] not found!");
+			return;
+		}
+		
 		Reader br = null;
 		try {
-			File sourceCode = new File("test/test301.mj");
+			// File sourceCode = new File("test/test301.mj");
 			log.info("Compiling source file: " + sourceCode.getAbsolutePath());
 			
 			br = new BufferedReader(new FileReader(sourceCode));
@@ -50,7 +61,9 @@ public class Compiler {
 	      
 			SymbolTable.dump();
 			if(!p.errorDetected && v.passed()){
-				File objFile = new File("test/program.obj");
+				File objFile = new File(args[1]);
+				log.info("Generating bytecode file: " + objFile.getAbsolutePath());
+				// File objFile = new File("test/program.obj");
 				if(objFile.exists()) objFile.delete();
 				
 				CodeGenerator codeGenerator = new CodeGenerator();

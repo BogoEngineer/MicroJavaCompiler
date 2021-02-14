@@ -380,7 +380,7 @@ public class SemanticAnalyzer extends VisitorAdaptor {
 			ternaryExpr.obj = SymbolTable.noObj;
 			return;
 		}
-		if(conditionObj.getType() != SymbolTable.boolType){
+		if(conditionObj.getType() != SymbolTable.boolType && conditionObj.getType() != SymbolTable.intType){
 			report_error("Uslov ternarnog operatora mora biti tipa bool! ", ternaryExpr);
 			ternaryExpr.obj = SymbolTable.noObj;
 			return;

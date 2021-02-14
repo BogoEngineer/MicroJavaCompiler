@@ -1,0 +1,32 @@
+program test
+
+const bool t=true;
+
+{
+
+	void main() 
+	int a,d; char c[],e;
+	bool f;
+	{
+		c=new char[100]; a=0;
+		
+		read(c[a]); a++;
+		read(c[a]); a++;
+		read(c[a]); a++;
+		read(c[a]); a++;
+		a=0;
+		print(c[a],4); a++;
+		print(c[a],4); a++;
+		print(c[a],4); a++;
+		print(c[a],4); a++;
+		d=(5+5)*(5+5);
+		d=d*d*d;
+		print(d,4);
+		
+		a=t?101:010;
+		f=false?false:true;
+		
+		print(f,10);
+		print(a,10);
+	}
+}

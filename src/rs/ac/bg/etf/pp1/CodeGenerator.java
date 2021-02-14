@@ -10,8 +10,15 @@ import rs.etf.pp1.symboltable.concepts.Struct;
 import org.apache.log4j.Logger;
 import java.util.*;
 
+/*System.out.println("POSTFIX IZRAZ U ASN: ");
+int index = 0;
+for(String postfixElem : postfixExpr) {
+	System.out.println(index++ + ": " + postfixElem + " ");
+}*/
 
 public class CodeGenerator extends VisitorAdaptor {
+	private String lastBeen = "";
+	
 	private int mainPc;
 	
 	public int getMainPc(){
@@ -22,7 +29,14 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	LinkedList<String> postfixExpr = new LinkedList<String>(); // koriscen kao struktura koja cuva ceo postfix izraz nakon prepoznavanja Expr
 	Stack<String> operationStack = new Stack<String>(); // stek za operatore (prioriteti)
+	
+	LinkedList<Integer> negativePositions = new LinkedList<Integer>();
+	LinkedList<Integer> addedToIndexes = new LinkedList<Integer>();
+	
+	LinkedList<Integer> insertNegatePositions = new LinkedList<Integer>(); // za postfixExprToStackExpr()
+	
 	// kodovi za operationStack
+	
 	
 	int byteCodeFix = 0; // poslednja/e linije u bytecode koje treba ispraviti
 	
@@ -39,12 +53,21 @@ public class CodeGenerator extends VisitorAdaptor {
 		LBRACKET = "[",
 		RBRACKET = "]",
 		COLON = ":",
-		QMARK = "?"
+		QMARK = "?",
+		NEGATE= "-e"
 	;
 	
 	Logger log = Logger.getLogger(getClass());
+		
+	private boolean pleaseFixMe = false;
+	
+	private int pomeraj = 1;
+	
+	private boolean charArray = false;
 	
 	private void postfixExprToExprStack() {
+		int positionCount = 0;
+		
 		// stavlja postfixExpr na ExprStack pozivanjem Code funkcija
 		if(postfixExpr.isEmpty()) return;
 		for(String postfixElem : postfixExpr) {
@@ -67,20 +90,36 @@ public class CodeGenerator extends VisitorAdaptor {
 			case LBRACKET: // dont do anything
 				break;
 			case RBRACKET: // dont do anything
-				Code.put(Code.aload);
+				if(!charArray) Code.put(Code.aload);
+				else Code.put(Code.baload);
+				// charArray = false;
+				
+				if(pleaseFixMe) { // fix za ternarni expr u indeksu
+					Code.buf[byteCodeFix] = (byte)((Code.pc-byteCodeFix+pomeraj)>>8); // prvo stavljam visi pa nizi bajt u bajtkod, pc vec pokazuje pocetak drugog Expr
+					Code.buf[byteCodeFix+1] = (byte)(Code.pc-byteCodeFix+pomeraj);  // pa ne treba pc + 1
+					pomeraj = 1;
+					pleaseFixMe = false;
+				}
 				break;
 			case COLON:
 				Code.put(Code.jmp); // bezuslovni skok da se preskoci izracunavanje drugog izraza
 				Code.put2(0);
+				
+				// popravljanje adrese za skok nakon izraza pre ?
 				Code.buf[byteCodeFix] = (byte)((Code.pc-byteCodeFix+1)>>8); // prvo stavljam visi pa nizi bajt u bajtkod, pc vec pokazuje pocetak drugog Expr
 				Code.buf[byteCodeFix+1] = (byte)(Code.pc-byteCodeFix+1);  // pa ne treba pc + 1
+				
 				byteCodeFix = Code.pc-2;
 				break;
 			case QMARK:
-				Code.loadConst(1);
-				Code.put(Code.jcc + Code.ne);
+				Code.loadConst(0);
+				Code.put(Code.jcc + Code.eq);
 				byteCodeFix = Code.pc;
 				Code.put2(0); // skok prima adresu od 16b koju treba zakrpiti 
+				break;
+			case LPAREN:
+				break;
+			case RPAREN:
 				break;
 			default:
 				if(postfixElem.chars().allMatch( Character::isDigit )) { 
@@ -100,10 +139,77 @@ public class CodeGenerator extends VisitorAdaptor {
 				}
 				
 			}
+			positionCount++;
+			for(int i = 0; i < insertNegatePositions.size(); i++) {
+				if(insertNegatePositions.get(i) == positionCount) {
+					// System.out.println("PositionCount: " + positionCount);
+					insertNegatePositions.remove(i);
+					Code.put(Code.neg);
+				}
+			}
 		}
+		
 		// kad si premestio na Expr Stack, ocisti ove strukture
 		postfixExpr.clear();
 		operationStack.clear();
+	}
+		
+	public void visit(Neg neg) {		
+		negativePositions.add(postfixExpr.size());
+	}
+	
+	private Integer checkIfArrayIndex(Integer position) {
+		// returns input position if its not array index, or position of last ] if it is	
+		int brackets = 0;
+		for(int i = position; i < postfixExpr.size(); i++) {
+			String op = postfixExpr.get(i);
+			if(op.equals(ADD) || op.equals(SUB) || op.equals(MUL) || op.equals(DIV) || op.equals(MOD)) break;
+			if(op.equals(LBRACKET)) {
+				brackets++;
+			}
+			if(op.equals(RBRACKET)) {
+				brackets--;
+				if(brackets == 0) return i+1;
+			}
+		}
+		
+		if(brackets == 1) return postfixExpr.size(); // hardcode
+		
+		return position;		
+	}
+	
+	public void visit(NegExpr1 neg) {
+		/*System.out.println("POSTFIX IZRAZ U NEGEXPR: ");
+		for(String postfixElem : postfixExpr) {
+			System.out.println(postfixElem + " ");
+		}*/
+				
+		Integer nextNegative = negativePositions.pollLast();
+				
+		boolean waitEqual = postfixExpr.get(nextNegative).equals(LPAREN);
+		
+		if(!waitEqual) {
+			Integer position = checkIfArrayIndex(nextNegative);
+			
+			if(position == nextNegative) insertNegatePositions.add(position+1);
+			else insertNegatePositions.add(position);
+			//insertNegatePositions.add(position+1);
+			return;
+		}
+		
+		int paren = 1;
+		int ind = 0;
+		
+		String pe;
+		for(int i = nextNegative+1; paren!=0; i++) {
+			pe = postfixExpr.get(i);
+			if(pe.equals(LPAREN)) paren++;
+			if(pe.equals(RPAREN)) paren--;
+			// System.out.println("DEBUG: " + pe + " " + paren);
+			ind = i;
+		}	
+		
+		insertNegatePositions.add(ind+1);
 	}
 	
 	public void visit(ProgName progName) {
@@ -112,14 +218,17 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	public void visit(PrintStmt printStmt){
 		Obj exprObj = printStmt.getExpr().obj;
+		
+		if(postfixExpr.contains(QMARK)) pomeraj = 0;
+		
 		if(exprObj.getType() == SymbolTable.intType){
 			while(!operationStack.isEmpty()) {
 				postfixExpr.add(operationStack.pop());
 			}
-			/* System.out.println("print arg: ");
+			/*System.out.println("print arg: ");
 			for(String postfixElem : postfixExpr) {
 				System.out.println(postfixElem + " ");
-			} */
+			}*/
 			postfixExprToExprStack();
 			Code.loadConst(printLen == -1 ? 5 : printLen);
 			Code.put(Code.print);
@@ -132,6 +241,7 @@ public class CodeGenerator extends VisitorAdaptor {
 			Code.loadConst(printLen == -1 ? 1 : printLen);
 			Code.put(Code.bprint);
 		}else {
+			postfixExprToExprStack();
 			Code.loadConst(printLen == -1 ? 1 : printLen);
 			Code.put(Code.print);
 		}
@@ -162,26 +272,15 @@ public class CodeGenerator extends VisitorAdaptor {
 	
 	public void visit(NumConst nc) {
 		postfixExpr.add(Integer.toString(nc.getNum()));
-		/* Obj con = SymbolTable.insert(Obj.Con, "$", SymbolTable.intType);
-		con.setLevel(0);
-		con.setAdr(nc.getNum());
-		
-		Code.load(con); */
 	}
 	
 	public void visit(CharConst nc) {
-		Obj con = SymbolTable.insert(Obj.Con, "$", SymbolTable.intType);
-		con.setLevel(0);
-		con.setAdr(nc.getChr());
-		Code.load(con);
+		postfixExpr.add(Integer.toString(nc.getChr()));
 	}
 	
 	public void visit(BoolConst nc) {
-		Obj con = SymbolTable.insert(Obj.Con, "$", SymbolTable.intType);
-		con.setLevel(0);
-		con.setAdr(nc.getBl().equals("true") ? 1 : 0);
-		
-		Code.load(con);
+		if(nc.getBl().equals("true")) postfixExpr.add(Integer.toString(1));
+		else postfixExpr.add(Integer.toString(0));
 	}
 	
 	public void visit(MethodDeclVars methodDecl){
@@ -197,24 +296,55 @@ public class CodeGenerator extends VisitorAdaptor {
 	public void visit(DesignatorIndex designatorIndex) {
 		SyntaxNode parent = designatorIndex.getParent();
 		if(ReadStmt.class == parent.getClass()) return;
+		
+	
 		if(AssignmentExpr.class != parent.getClass()){ // ako je ovaj designator na levoj strani operacije ++ ili --
-			//Code.load(SymbolTable.find(designatorIndex.getDesignatorName().getName())); // ne valja
-			if(parent.getClass() == Var.class) { // ako je ovaj designator na desnoj strani operacije dodele vrednosti
+			if(parent.getClass() == Var.class) { // ako je ovaj designator npr. argument print metode ili unutar indeksera nekog niza
 				// pop till left bracket
+				
+				// System.out.println("Posl: "+ lastBeen);
+				/*System.out.println("print arg: ");
+				for(String postfixElem : operationStack) {
+					System.out.println(postfixElem + " ");
+				}*/
+				
+				if(!operationStack.contains(LBRACKET)) operationStack.add(0, LBRACKET);
 				while(operationStack.peek() != LBRACKET) {
 					postfixExpr.add(operationStack.pop());
 				}
+				
+				if(postfixExpr.contains(QMARK)) pleaseFixMe = true; // u slucaju da se ternarni izraz nalazi unutar indeksa nekon niza koji je unutar indeksa nekog niza...
+				
 				operationStack.pop(); // pop left bracket
 				// ovo moze pripadati nekom vecem expr pa ne treba stavljati odmah sve na Expr Stack
-				postfixExpr.add(RBRACKET); 
+				postfixExpr.add(RBRACKET);
 				// dodaje se da bi se znalo da se na RBRACKET u generisanom kodu smesti aload instrukcija kako bi se dohvatio element niza na poziciji
 				// koja je ukazana postfix expr-om izmedju LBRACKETa i RBRACKETa
+				
+				// postfixExprToExprStack() se za ovo poziva tek u AssignmentExpr visist-u
+				
+				lastBeen = "DesIndex1";
 			}
 		}else {
 			Obj array = SymbolTable.findInProgram(programObj, designatorIndex.getDesignatorName().getName());
 			Code.load(array); // stavi na stek koja promenljiva
+			
+			// za svaki slucaj
+			while(!operationStack.empty()) {
+				postfixExpr.add(operationStack.pop());
+			}
+			
+			if(array.getType() == SymbolTable.charArrayType) charArray = true; 
+			else charArray = false;
 			postfixExprToExprStack(); // stavi na stek u koji element niza treba da se ucita nesto
+			
+			if(designatorIndex.getExpr().getClass() == TernaryExpr.class) { // fix za ternarni expr u indeksu
+				Code.buf[byteCodeFix] = (byte)((Code.pc-byteCodeFix+1)>>8); // prvo stavljam visi pa nizi bajt u bajtkod, pc vec pokazuje pocetak drugog Expr
+				Code.buf[byteCodeFix+1] = (byte)(Code.pc-byteCodeFix+1);  // pa ne treba pc + 1
+			}
+			lastBeen = "DesIndex2";
 		}
+		
 	}
 	
 	public void visit(SingleDesignator singleDesignator) {
@@ -258,7 +388,7 @@ public class CodeGenerator extends VisitorAdaptor {
 			operationStack.push(SUB);
 		}
 	}
-	
+
 	public void visit(Mulop mulop) {
 		if(operationStack.isEmpty()) operationStack.push(MUL);
 		else {
@@ -322,32 +452,46 @@ public class CodeGenerator extends VisitorAdaptor {
 		while(!operationStack.isEmpty()) {
 			postfixExpr.add(operationStack.pop());
 		}
-		/* System.out.println("POSTFIX IZRAZ NAKON OPERACIJE DODELE VREDNOSTI: ");
+		/*System.out.println("POSTFIX IZRAZ U ASN: ");
+		int index = 0;
 		for(String postfixElem : postfixExpr) {
-			System.out.println(postfixElem + " ");
-		} */
-		/* do something */
-		postfixExprToExprStack(); // na stek ide desna strana izraza jednakosti, ako je bio izraz new int[2] onda na steku nece biti nista pa se ne desava nista
-		Designator leftSideOperand = assExpr.getDesignator();
-		if(leftSideOperand instanceof SingleDesignator) { // obicna promenljivaq
-			Code.store(SymbolTable.findInProgram(programObj, ((SingleDesignator)leftSideOperand).getDesignatorName().getName()));
+			System.out.println(index++ + ": " + postfixElem + " ");
+		}*/
+		if(postfixExpr.contains(QMARK)) pomeraj = 0;		
+		
+		Designator leftSideOperandDesignator = assExpr.getDesignator();
+
+		if(leftSideOperandDesignator instanceof SingleDesignator) { // obicna promenljivaq
+			Obj leftSideOperand = SymbolTable.findInProgram(programObj, ((SingleDesignator)leftSideOperandDesignator).getDesignatorName().getName());
+			
+			postfixExprToExprStack(); // na stek ide desna strana izraza jednakosti, ako je bio izraz new int[2] onda na steku nece biti nista pa se ne desava nista
+			Code.store(leftSideOperand);
 		}else { // dodeljivanje elementu niza
-			// postfixExprToExprStack(); // na stek ide desna strana izraza za dodelu
-			Code.put(Code.astore); // ucitavanje desne strane izraza u levu koja je ucitana u DesignatorIndexu
+			Obj leftSideOperand = SymbolTable.findInProgram(programObj, ((DesignatorIndex)leftSideOperandDesignator).getDesignatorName().getName());
+
+			if(leftSideOperand.getType() == SymbolTable.charArrayType) charArray = true;
+			else charArray = false;
+			postfixExprToExprStack(); // na stek ide desna strana izraza jednakosti, ako je bio izraz new int[2] onda na steku nece biti nista pa se ne desava nista
+			
+			Code.store(new Obj(Obj.Elem, leftSideOperand.getName(), new Struct(leftSideOperand.getType().getElemType().getKind()))); // Code stavlja bastore ili astore u zavisnosti od toga da li je char ili ne
 		}
+		lastBeen = "AssExpr";
 	}
 	
 	public void visit(ParenExpr parenExpr) { // pop till right parenthesis
 		while(operationStack.peek() != LPAREN) {
 			postfixExpr.add(operationStack.pop());
 		}
-		operationStack.pop(); // pop left parenthesis
+		postfixExpr.add(RPAREN);
+		operationStack.pop(); // pop left parenthesis 
+		// ne popujem zbog negacije
 	}
 	
 	public void visit(LeftParen leftParen) {
 		if(ParenExpr.class == leftParen.getParent().getClass()) { // mora biti al za svaki slucaj
 			operationStack.push(LPAREN);
 		}
+		postfixExpr.add(LPAREN);
 	}
 	
 	public void visit(NewFactorArray newFactorArray) { // generisanje koda za alokaciju memorije na heapu za niz
@@ -355,7 +499,7 @@ public class CodeGenerator extends VisitorAdaptor {
 		Code.put(Code.newarray);
 		if (newFactorArray.getType().obj.getType() == SymbolTable.charType) {
 			Code.put(0);
-		} else {
+		} else { // i bool smestas kao reci a ne kao bajtove
 			Code.put(1);
 		}
 	}
@@ -368,10 +512,17 @@ public class CodeGenerator extends VisitorAdaptor {
 			Code.loadConst(1); // mozda treba da se uradi nesto sa constObj
 			Code.put(Code.add);
 			Code.store(desObj);
+			postfixExpr.clear();
+			operationStack.clear();
 		}else {
 			Obj desObj = SymbolTable.findInProgram(programObj, ((DesignatorIndex)des).getDesignatorName().getName());
 			Code.load(desObj); // uvek mora da se stavi var svakako
 			postfixExprToExprStack();
+			
+			if(((DesignatorIndex)des).getExpr().getClass() == TernaryExpr.class) { // fix za ternarni expr u indeksu
+				Code.buf[byteCodeFix] = (byte)((Code.pc-byteCodeFix+1)>>8); // prvo stavljam visi pa nizi bajt u bajtkod, pc vec pokazuje pocetak drugog Expr
+				Code.buf[byteCodeFix+1] = (byte)(Code.pc-byteCodeFix+1);  // pa ne treba pc + 1
+			}
 			Code.put(Code.dup2);
 			Code.put(Code.aload); // ucitaj element niza zadat sa dup2
 			Code.loadConst(1);
@@ -388,10 +539,18 @@ public class CodeGenerator extends VisitorAdaptor {
 			Code.loadConst(1); // mozda treba da se uradi nesto sa constObj
 			Code.put(Code.sub);
 			Code.store(desObj);
+			postfixExpr.clear();
+			operationStack.clear();
 		}else {
 			Obj desObj = SymbolTable.findInProgram(programObj, ((DesignatorIndex)des).getDesignatorName().getName());
 			Code.load(desObj); // uvek mora da se stavi var svakako
 			postfixExprToExprStack();
+			
+			if(((DesignatorIndex)des).getExpr().getClass() == TernaryExpr.class) { // fix za ternarni expr u indeksu
+				Code.buf[byteCodeFix] = (byte)((Code.pc-byteCodeFix+1)>>8); // prvo stavljam visi pa nizi bajt u bajtkod, pc vec pokazuje pocetak drugog Expr
+				Code.buf[byteCodeFix+1] = (byte)(Code.pc-byteCodeFix+1);  // pa ne treba pc + 1
+			}
+			
 			Code.put(Code.dup2);
 			Code.put(Code.aload); // ucitaj element niza zadat sa dup2
 			Code.loadConst(1);
@@ -401,47 +560,77 @@ public class CodeGenerator extends VisitorAdaptor {
 	}
 	
 	public void visit(TernaryExpr terExpr) {
+		boolean giveLBack = false;
 		while(!operationStack.isEmpty()) { // mora zbog poslednjeg Expr1
-			postfixExpr.add(operationStack.pop());
+			String op = operationStack.pop();
+			if(op != LBRACKET) postfixExpr.add(op);
+			else giveLBack = true;
 		}
-		for(String postfixElem : postfixExpr) {
-			System.out.println(postfixElem + " ");
+		
+		if(giveLBack) operationStack.add(LBRACKET);
+
+		if(terExpr.getParent().getClass() != DesignatorIndex.class) {
+			postfixExprToExprStack(); // mora if da ne bi prvo stavio terExpr na ExprStack pa onda adresu niza
+			Code.buf[byteCodeFix] = (byte)((Code.pc-byteCodeFix+1)>>8); // prvo stavljam visi pa nizi bajt u bajtkod, pc vec pokazuje pocetak drugog Expr
+			Code.buf[byteCodeFix+1] = (byte)(Code.pc-byteCodeFix+1);  // pa ne treba pc + 1
 		}
-		postfixExprToExprStack();
-		System.out.println("FIX: "+ byteCodeFix + " " + Code.pc);
-		Code.buf[byteCodeFix] = (byte)((Code.pc-byteCodeFix+1)>>8); // prvo stavljam visi pa nizi bajt u bajtkod, pc vec pokazuje pocetak drugog Expr
-		Code.buf[byteCodeFix+1] = (byte)(Code.pc-byteCodeFix+1);  // pa ne treba pc + 1
+		lastBeen = "TernExpr";
 	}
 	
 	public void visit(Qmark qmark) {
+		boolean giveLBack = false;
 		while(!operationStack.isEmpty()) {
-			postfixExpr.add(operationStack.pop());
+			String op = operationStack.pop();
+			if(op != LBRACKET) postfixExpr.add(op);
+			else giveLBack = true;
 		}
+		
+		if(giveLBack) operationStack.add(LBRACKET);
+		
 		postfixExpr.add(QMARK);
+		lastBeen = "Qmark";
 	}
 	
 	public void visit(Colon colon) {
+		boolean giveLBack = false;
 		while(!operationStack.isEmpty()) {
-			postfixExpr.add(operationStack.pop());
+			String op = operationStack.pop();
+			if(op != LBRACKET) postfixExpr.add(op);
+			else giveLBack = true;
 		}
+		
+		if(giveLBack) operationStack.add(LBRACKET);
+		
 		postfixExpr.add(COLON);
+		lastBeen = "Colon";
 	}
 	
 	public void visit(ReadStmt readStmt) {
 		Designator des = readStmt.getDesignator();
+		
+		if(postfixExpr.contains(QMARK)) pomeraj = 0;
+		
 		if(des instanceof SingleDesignator) {
 			Obj obj = SymbolTable.findInProgram(programObj, ((SingleDesignator)des).getDesignatorName().getName());
-			if(obj.getType() != SymbolTable.intType) Code.put(Code.bread);
+			if(obj.getType() == SymbolTable.charType) Code.put(Code.bread);
 			else Code.put(Code.read);
 			Code.store(obj);
 			
 		}else {
 			Obj obj = SymbolTable.findInProgram(programObj, ((DesignatorIndex)des).getDesignatorName().getName());
 			Code.load(obj);
+			
+			while(!operationStack.empty()) {
+				postfixExpr.add(operationStack.pop());
+			}
+			
+			if(obj.getType() == SymbolTable.charArrayType) charArray = true;
+			else charArray = false;
 			postfixExprToExprStack();
-			if(obj.getType().getElemType() != SymbolTable.intType) Code.put(Code.bread);
+			if(obj.getType().getElemType() == SymbolTable.charType) Code.put(Code.bread);
 			else Code.put(Code.read);
-			Code.put(Code.astore);
+			if(obj.getType().getElemType() == SymbolTable.charType) Code.put(Code.bastore);
+			else Code.put(Code.astore); // i bool smestas kao reci
 		}
 	}
 }

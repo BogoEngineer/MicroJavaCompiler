@@ -1,0 +1,42 @@
+program boolArray
+
+	const int nula = 0;
+	const int jedan = 1;
+	const int pet = 5;
+
+	bool niz[];
+	bool temp;
+	
+{
+	void main()	
+		int bodovi;
+		bool bt;
+	{
+		niz = new bool[8];
+		
+		read(bt);
+		temp = false;
+		
+		niz[0] = false;
+		niz[1] = true;
+		niz[2] = bt;
+		niz[3] = temp;
+		print(niz[0]);
+		print(niz[1]);
+		print(niz[2]);
+		print(niz[3]);
+		print(eol);
+		
+		read(niz[4]);
+		read(niz[5]);
+		read(niz[6]);
+		read(niz[7]);
+		
+		// print(true);
+		print(niz[4]);
+		print(niz[5]);
+		print(niz[6]);
+		print(niz[7]);
+		
+	}
+}
