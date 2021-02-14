@@ -14,7 +14,7 @@ Supported:
 
 ## Usage
 
-Use ant build with build.xml or run manually src/rs/ac/bg/etf/pp1/Compiler.java <YourMicroJavaProgram.mj> <WantedObjFile.obj> to get .obj file that is runnable on MJVM (MicroJava virtual machine).
+Use ant build with build.xml or run manually run src/rs/ac/bg/etf/pp1/Compiler.java <YourMicroJavaProgram.mj> <WantedObjFile.obj> to get .obj file that is runnable on MJVM (MicroJava virtual machine) and then run mj-runtime-1.1.jar <ObjFileToRun.obj> to execute mjvm code.
 
 
 ## Tools used
